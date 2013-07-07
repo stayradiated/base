@@ -11,7 +11,7 @@ swig = require 'swig'
 
 # Load values from one object into another
 include = (to, from) ->
-  for key, value of attrs
+  for key, value of from
     to[key] = value
   return this
 

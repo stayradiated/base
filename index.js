@@ -12,8 +12,8 @@
 
   include = function(to, from) {
     var key, value;
-    for (key in attrs) {
-      value = attrs[key];
+    for (key in from) {
+      value = from[key];
       to[key] = value;
     }
     return this;
