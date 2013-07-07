@@ -10,25 +10,23 @@
 
   swig = require('swig');
 
-  swig.init({
-    root: __dirname + '/../../../source/views'
-  });
-
-  include = function(attrs) {
+  include = function(to, from) {
     var key, value;
     for (key in attrs) {
       value = attrs[key];
-      this[key] = value;
+      to[key] = value;
     }
     return this;
   };
 
   Controller = (function() {
+    Controller.prototype.include = function(obj) {
+      return include(this, obj);
+    };
+
     Controller.prototype.elements = {};
 
     Controller.prototype.events = {};
-
-    Controller.prototype.include = include.bind(Controller);
 
     Controller.prototype._bind = function(el) {
       var action, event, name, query, selector, split, _ref, _ref1, _results;
@@ -58,7 +56,8 @@
 
     function Controller(attrs) {
       this._bind = __bind(this._bind, this);
-      include(this, attrs);
+      this.include = __bind(this.include, this);
+      this.include(this, attrs);
       if (this.el != null) {
         this._bind();
       }
@@ -108,12 +107,15 @@
   Model = (function(_super) {
     __extends(Model, _super);
 
-    Model.prototype.include = include.bind(Model._data);
+    Model.prototype.include = function(obj) {
+      return include(this, obj);
+    };
 
     function Model(attrs) {
       this.toJSON = __bind(this.toJSON, this);
       this.destroy = __bind(this.destroy, this);
       this.refresh = __bind(this.refresh, this);
+      this.include = __bind(this.include, this);
       var get, key, set,
         _this = this;
       Model.__super__.constructor.apply(this, arguments);
@@ -121,7 +123,7 @@
         this.defaults = {};
       }
       this._data = {};
-      this.include(defaults);
+      this.include(this.defaults);
       this.include(attrs);
       set = function(key) {
         return function(value) {
@@ -264,6 +266,8 @@
   })(Event);
 
   View = (function() {
+    View.init = Swig.init;
+
     function View(filename) {
       this.render = __bind(this.render, this);
       var path;
@@ -280,7 +284,6 @@
   })();
 
   module.exports = {
-    $: $,
     Event: Event,
     Controller: Controller,
     Model: Model,

@@ -6,26 +6,23 @@
 $ = require 'jqueryify'
 
 # Uses swig for templating
+# Can easily be substituted with another templating engine
 swig = require 'swig'
 
-# TODO: set this outside of base
-swig.init
-  root: __dirname + '/../../../source/views'
-
 # Load values from one object into another
-include = (attrs) ->
+include = (to, from) ->
   for key, value of attrs
-    @[key] = value
+    to[key] = value
   return this
 
 
 # Handle DOM interaction
 class Controller
 
+  include: (obj) => include(this, obj)
+
   elements: {}
   events: {}
-
-  include: include.bind(this)
 
   # You can specify which element to bind to
   # But it defaults to @el
@@ -46,7 +43,7 @@ class Controller
         el.on(event, @[action])
 
   constructor: (attrs) ->
-    include(this, attrs)
+    @include(this, attrs)
 
     # Binding events/elements requires an element
     if @el? then @_bind()
@@ -77,7 +74,7 @@ class Event
 # Just stores data and has defaults and events
 class Model extends Event
 
-  include: include.bind(@_data)
+  include: (obj) => include(this, obj)
 
   constructor: (attrs) ->
     super
@@ -85,7 +82,7 @@ class Model extends Event
     @defaults ?= {}
     @_data = {}
 
-    @include(defaults)
+    @include(@defaults)
     @include(attrs)
 
     set = (key) =>
@@ -181,6 +178,10 @@ class Collection extends Event
 
 # A view stores and renders a template
 class View
+  
+  # Expose swig
+  # root: __dirname + '/../../../source/views'
+  @init: Swig.init
 
   constructor: (filename) ->
     path = filename + '.html'
@@ -192,7 +193,6 @@ class View
 
 # Export all the classes and jQuery
 module.exports =
-  $: $
   Event: Event
   Controller: Controller
   Model: Model

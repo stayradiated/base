@@ -3,9 +3,6 @@
   "version": "0.0.1",
   "description": "A tiny and simple javascript MVC framework",
   "main": "index.js",
-  "scripts": {
-    "test": "mocha tests"
-  },
   "repository": {
     "type": "git",
     "url": "https://stayradiated@github.com/stayradiated/Base.git"
