@@ -1,5 +1,5 @@
 {
-  "name": "Base",
+  "name": "base",
   "version": "0.0.1",
   "description": "A tiny and simple javascript MVC framework",
   "main": "index.js",
