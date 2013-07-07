@@ -102,7 +102,7 @@ class Model extends Event
       @__defineGetter__ key, get(key)
 
   refresh: (data) =>
-    @_include(data)
+    @include(data)
     @trigger('refresh')
 
   destroy: =>
