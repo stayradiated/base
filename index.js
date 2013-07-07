@@ -266,7 +266,7 @@
   })(Event);
 
   View = (function() {
-    View.init = Swig.init;
+    View.init = swig.init.bind(swig);
 
     function View(filename) {
       this.render = __bind(this.render, this);

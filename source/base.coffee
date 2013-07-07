@@ -181,7 +181,7 @@ class View
   
   # Expose swig
   # root: __dirname + '/../../../source/views'
-  @init: Swig.init
+  @init: swig.init.bind(swig)
 
   constructor: (filename) ->
     path = filename + '.html'
