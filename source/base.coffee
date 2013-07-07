@@ -13,13 +13,11 @@ swig = require 'swig'
 include = (to, from) ->
   for key, value of from
     to[key] = value
-  return this
+  return to
 
 
 # Handle DOM interaction
 class Controller
-
-  include: (obj) => include(this, obj)
 
   elements: {}
   events: {}
@@ -43,7 +41,7 @@ class Controller
         el.on(event, @[action])
 
   constructor: (attrs) ->
-    @include(this, attrs)
+    include(this, attrs)
 
     # Binding events/elements requires an element
     if @el? then @_bind()
@@ -74,16 +72,14 @@ class Event
 # Just stores data and has defaults and events
 class Model extends Event
 
-  include: (obj) => include(this, obj)
-
   constructor: (attrs) ->
     super
 
     @defaults ?= {}
     @_data = {}
 
-    @include(@defaults)
-    @include(attrs)
+    include(@defaults)
+    include(attrs)
 
     set = (key) =>
       (value) =>
@@ -99,7 +95,7 @@ class Model extends Event
       @__defineGetter__ key, get(key)
 
   refresh: (data) =>
-    @include(data)
+    include(data)
     @trigger('refresh')
 
   destroy: =>

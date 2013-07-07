@@ -16,14 +16,10 @@
       value = from[key];
       to[key] = value;
     }
-    return this;
+    return to;
   };
 
   Controller = (function() {
-    Controller.prototype.include = function(obj) {
-      return include(this, obj);
-    };
-
     Controller.prototype.elements = {};
 
     Controller.prototype.events = {};
@@ -56,8 +52,7 @@
 
     function Controller(attrs) {
       this._bind = __bind(this._bind, this);
-      this.include = __bind(this.include, this);
-      this.include(this, attrs);
+      include(this, attrs);
       if (this.el != null) {
         this._bind();
       }
@@ -107,15 +102,10 @@
   Model = (function(_super) {
     __extends(Model, _super);
 
-    Model.prototype.include = function(obj) {
-      return include(this, obj);
-    };
-
     function Model(attrs) {
       this.toJSON = __bind(this.toJSON, this);
       this.destroy = __bind(this.destroy, this);
       this.refresh = __bind(this.refresh, this);
-      this.include = __bind(this.include, this);
       var get, key, set,
         _this = this;
       Model.__super__.constructor.apply(this, arguments);
@@ -123,8 +113,8 @@
         this.defaults = {};
       }
       this._data = {};
-      this.include(this.defaults);
-      this.include(attrs);
+      include(this.defaults);
+      include(attrs);
       set = function(key) {
         return function(value) {
           if (value === _this._data[key]) {
@@ -146,7 +136,7 @@
     }
 
     Model.prototype.refresh = function(data) {
-      this.include(data);
+      include(data);
       return this.trigger('refresh');
     };
 
