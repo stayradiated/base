@@ -1,7 +1,7 @@
 Base
 ====
 
-A tiny and simple javascript framework based on spine.js
+_A tiny and simple javascript framework based on spine.js_
 
 It was written to be used specifically with NodeJS based projects, such as
 Node-Webkit, but it could be easily edited to work in the browser.
