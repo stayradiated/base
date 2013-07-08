@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "jqueryify": "2.0.0",
-    "underscore": "*",
     "swig": "git://github.com/paularmstrong/swig"
   },
   "devDependencies": {

@@ -8,16 +8,8 @@
   // Use swig for templates
   var swig = require('swig');
 
-  // Use undescore for utils
-  _ = require('underscore');
-
-
-  /*
-   * UTILS
-   */
-
-  // Copy the attributes of one object into another
-  var include = function(to, from) {
+  // Copy object properties
+  include = function(to, from) {
     var key;
     for (key in from) {
       if (from.hasOwnProperty(key)) {
@@ -26,6 +18,22 @@
     }
   };
 
+  // CoffeeScript extend for classes
+  __extend = function(child, parent) {
+    var key, ctor;
+    for (key in parent) {
+      if (parent.hasOwnProperty(key)) {
+        child[key] = parent[key];
+      }
+    }
+    ctor = function() {
+      this.constructor = child;
+    };
+    ctor.prototype = parent.prototype;
+    child.prototype = new ctor();
+    child.__super__ = parent.prototype;
+    return child;
+  };
 
   /*
    * CONTROLLER
@@ -34,22 +42,23 @@
   var Controller = (function() {
 
     function Controller(attrs) {
+      this.elements = {};
+      this.events = {};
       include(this, attrs);
-      if (!this.elements) { this.elements = {}; }
-      if (!this.events) { this.events = {}; }
-      if (this.el) { this._bind(); }
+      if (this.el) { this.bind(); }
     }
 
-    Controller.prototype._bind = function(el) {
+    Controller.prototype.bind = function(el) {
       var selector, query, action, split, event;
 
-      // If el is not defined use this.el
+      // If el is not specified use this.el
       if (!el) { el = this.el; }
 
       // Cache elements
       for (selector in this.elements) {
         if (this.elements.hasOwnProperty(selector)) {
-          this.elements[selector] = el.find(selector);
+          name = this.elements[selector];
+          this[name] = el.find(selector);
         }
       }
 
@@ -120,7 +129,7 @@
 
   var Model = (function() {
 
-    function Model(attrs) {
+    Model = function(attrs) {
 
       var key, self = this;
 
@@ -130,14 +139,14 @@
       // Set attributes
       if (!this.defaults) { this.defaults = {}; }
       this._data = {};
-      include(this.defaults);
-      include(attrs);
+      include(this._data, this.defaults);
+      include(this._data, attrs);
 
       set = function(key) {
         // Encapture key
         return function(value) {
           // Don't do anything if the value doesn't change
-          if (value === _this._data[key]) { return; }
+          if (value === self._data[key]) { return; }
           self._data[key] = value;
           self.trigger('change:' + key, value);
         };
@@ -157,12 +166,15 @@
         }
       }
 
-    }
+    };
+
+    // Load Events
+    __extend(Model, Event);
 
     // Load data into the model
     Model.prototype.refresh = function(data, replace) {
-      if (replace) { this._data = {}; }
-      include(this, data);
+      if (replace) { this._data = this.defaults; }
+      include(this._data, data);
       this.trigger('refresh');
       return this;
     };
@@ -179,7 +191,6 @@
       return this._data;
     };
 
-    _.extend(Model, Event);
 
     return Model;
 
@@ -192,11 +203,13 @@
 
   var Collection = (function() {
 
-
-    function Collection() {
+    Collection = function() {
       Collection.__super__.constructor.apply(this, arguments);
       this._records = [];
-    }
+    };
+    
+    // Load Events
+    __extend(Collection, Event);
 
     // Create a new instance of the model and add it to the collection
     Collection.prototype.create = function(attrs) {
@@ -286,7 +299,6 @@
       return this._records[index];
     };
 
-    _.extend(Collection, Event);
 
     return Collection;
 
@@ -299,17 +311,21 @@
 
   var View = (function() {
 
-    function View(filename) {
-      var path = filename + '.html';
-      this.template = swig.compileFile(path);
+    function View(template, fromString) {
+      if (fromString) {
+        this.template = swig.compile(template);
+      } else {
+        var path = template + '.html';
+        this.template = swig.compileFile(path);
+      }
     }
 
-    // Expose swig.init
-    View.init = swig.init.bind(swig);
+    // Expose swig
+    View.swig = swig;
 
     // Render the template
     View.prototype.render = function(data) {
-      return this.template.render(data);
+      return this.template(data);
     };
 
     return View;
@@ -317,31 +333,24 @@
   }());
 
 
-  // Add extend to all the classes
-  var extend = function(props) {
-    var parent = this;
-    var child;
-
-    if (props.constructor) {
-      child = props.constructor;
+  // Backbone like extending
+  extend = function(attrs) {
+    parent = this;
+    if (!attrs) { attrs = {}; }
+    if (attrs.hasOwnProperty('constructor')) {
+      child = attrs.constructor;
     } else {
       child = function() {
-        return parent.apply(this, arguments);
+        child.__super__.constructor.apply(this, arguments);
       };
     }
-    _.extend(child, parent);
-    var Surrogate = function() {
-      this.constructor = child;
-    };
-    Surrogate.prototype = parent.prototype;
-    child.prototype = new Surrogate();
-    if (props) { _.extend(child.prototype, props); }
-    child.__super__ = parent.prototype;
+    __extend(child, parent);
+    include(child.prototype, attrs);
     return child;
   };
-
-
-  Model.extend = extend;
+  
+  // Add the extend to method to all classes, except Event;
+  Event.extend = Controller.extend = Model.extend = Collection.extend = View.extend = extend;
 
   // Export all the classes
   module.exports = {
