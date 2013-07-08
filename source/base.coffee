@@ -3,11 +3,11 @@
 # The idea is that it only includes the stuff I use.
 
 # Uses jQuery for DOM stuff
-$ = require 'jqueryify'
+# $ = require 'jqueryify'
 
 # Uses swig for templating
 # Can easily be substituted with another templating engine
-swig = require 'swig'
+# swig = require 'swig'
 
 # Load values from one object into another
 include = (to, from) ->

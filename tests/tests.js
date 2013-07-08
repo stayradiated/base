@@ -1,7 +1,7 @@
 (function() {
 
   var Base = require('../index.js');
-  var assert = requir('assert');
+  var should = require('should');
 
   describe('Controller', function() {
 
@@ -17,10 +17,10 @@
 
     it('should trigger events', function(done) {
 
-      var arg = true;
+      var arg = '123';
 
       event.on('event', function(data) {
-        assert.equal(data, arg);
+        data.should.equal(arg);
         done();
       });
 
@@ -31,6 +31,22 @@
   });
 
   describe('Model', function() {
+
+    var model;
+
+    it('should create a new model', function() {
+      model = Base.Model.extend({
+        defaults: {
+          name: 'default name',
+          value: 20
+        }
+      });
+    });
+
+    it('should get attributes', function() {
+      console.log(model);
+      model.name.should.equal('default name');
+    });
 
   });
 

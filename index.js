@@ -1,34 +1,29 @@
 (function() {
 
-  // NPM Dependencies
-  var $ = require('jqueryify');
+  // Only load jQuery if are running in a browser
+  if (typeof window !== 'undefined') {
+    var $ = require('jqueryify');
+  }
+
+  // Use swig for templates
   var swig = require('swig');
+
+  // Use undescore for utils
+  _ = require('underscore');
 
 
   /*
    * UTILS
    */
 
-  var slice = [].slice;
-  var hasProp = {}.hasOwnProperty;
-
   // Copy the attributes of one object into another
   var include = function(to, from) {
-    for (var key in from) {
-      if (hasProp.call(from, key)) {
+    var key;
+    for (key in from) {
+      if (from.hasOwnProperty(key)) {
         to[key] = from[key];
       }
     }
-  };
-
-  // Extend a functions prototype
-  var extend = function(child, parent) {
-    includes(child, parent);
-    function ctor() { this.constructor = child; }
-    ctor.prototype = parent.prototype;
-    child.prototype = new ctor();
-    child.__super__ = parent.prototype;
-    return child;
   };
 
 
@@ -40,31 +35,36 @@
 
     function Controller(attrs) {
       include(this, attrs);
-      if (!this.elements) this.elements = {};
-      if (!this.events) this.events = {};
-      if (this.el != null) this._bind();
+      if (!this.elements) { this.elements = {}; }
+      if (!this.events) { this.events = {}; }
+      if (this.el) { this._bind(); }
     }
 
     Controller.prototype._bind = function(el) {
+      var selector, query, action, split, event;
 
       // If el is not defined use this.el
-      if (el == null) el = this.el;
+      if (!el) { el = this.el; }
 
       // Cache elements
-      for (var selector in this.elements) {
-        this.elements[selector] = el.find(selector);
+      for (selector in this.elements) {
+        if (this.elements.hasOwnProperty(selector)) {
+          this.elements[selector] = el.find(selector);
+        }
       }
 
       // Bind events
-      for (var query in this.events) {
-        var action = this.events[query];
-        var split = query.indexOf(' ') + 1;
-        var event = query.slice(0, split || 9e9);
-        var selector = query.slice(split);
-        if (selector.length > 0) {
-          el.on(event, selector, this[action]);
-        } else {
-          el.on(event, this[action]);
+      for (query in this.events) {
+        if (this.events.hasOwnProperty(query)) {
+          action = this.events[query];
+          split = query.indexOf(' ') + 1;
+          event = query.slice(0, split || 9e9);
+          selector = query.slice(split);
+          if (selector.length > 0) {
+            el.on(event, selector, this[action]);
+          } else {
+            el.on(event, this[action]);
+          }
         }
       }
 
@@ -72,7 +72,7 @@
 
     return Controller;
 
-  }();
+  }());
 
 
   /*
@@ -86,31 +86,32 @@
     }
 
     Event.prototype.on = function(events, fn) {
+      var i, len;
       // Allow multiple events to be set at once such as:
       // event.on('update change refresh', this.render);
       events = events.split(' ');
-      for (var i = 0, len = events.length; i < len; i++) {
-        event = events[_i];
-        if (this._events[event] == null) this._events[event] = [];
+      for (i = 0, len = events.length; i < len; i++) {
+        event = events[i];
+        if (!this._events[event]) { this._events[event] = []; }
         this._events[event].push(fn);
       }
     };
 
-    Event.prototype.trigger = function(event, args) {
+    Event.prototype.trigger = function(event) {
+      var actions, i, len;
       // args is a splat
-      event = arguments[0];
       args = 2 <= arguments.length ? [].slice.call(arguments, 1) : [];
-      var actions = this._events[event];
-      if (actions != null) {
-        for (var i = 0, len = actions.length; i < len; i++) {
-          actions[i].apply(fn, args);
+      actions = this._events[event];
+      if (actions) {
+        for (i = 0, len = actions.length; i < len; i++) {
+          actions[i].apply(actions[i], args);
         }
       }
     };
 
     return Event;
 
-  }();
+  }());
 
 
   /*
@@ -119,26 +120,24 @@
 
   var Model = (function() {
 
-    extends(Model, Event);
-
     function Model(attrs) {
+
+      var key, self = this;
 
       // Call super
       Model.__super__.constructor.apply(this, arguments);
 
       // Set attributes
-      if (this.defaults == null) this.defaults = {};
+      if (!this.defaults) { this.defaults = {}; }
       this._data = {};
       include(this.defaults);
       include(attrs);
-
-      var self = this;
 
       set = function(key) {
         // Encapture key
         return function(value) {
           // Don't do anything if the value doesn't change
-          if (value === _this._data[key]) return;
+          if (value === _this._data[key]) { return; }
           self._data[key] = value;
           self.trigger('change:' + key, value);
         };
@@ -146,19 +145,23 @@
 
       get = function(key) {
         // Encapture key
-        return function() { return self._data[key]; }
+        return function() {
+          return self._data[key];
+        };
       };
 
-      for (var key in this.defaults) {
-        this.__defineSetter__(key, set(key));
-        this.__defineGetter__(key, get(key));
+      for (key in this.defaults) {
+        if (this.defaults.hasOwnProperty(key)) {
+          this.__defineSetter__(key, set(key));
+          this.__defineGetter__(key, get(key));
+        }
       }
 
     }
 
     // Load data into the model
     Model.prototype.refresh = function(data, replace) {
-      if (replace) this._data = {};
+      if (replace) { this._data = {}; }
       include(this, data);
       this.trigger('refresh');
       return this;
@@ -176,6 +179,8 @@
       return this._data;
     };
 
+    _.extend(Model, Event);
+
     return Model;
 
   }());
@@ -187,7 +192,6 @@
 
   var Collection = (function() {
 
-    extends(Collection, Event);
 
     function Collection() {
       Collection.__super__.constructor.apply(this, arguments);
@@ -243,8 +247,9 @@
     // Append or replace the data in the collection
     // Doesn't trigger any events when updating the array apart from 'refresh'
     Collection.prototype.refresh = function(data, replace) {
-      if (replace) this._records = [];
-      for (var i = 0, len = data.length; i < len; i++) {
+      var i, len;
+      if (replace) { this._records = []; }
+      for (i = 0, len = data.length; i < len; i++) {
         var model = new this.model(data[i]);
         this._records.push(model);
       }
@@ -258,8 +263,8 @@
 
     // Convert the collection into an array of objects
     Collection.prototype.toJSON = function() {
-      var results = [];
-      for (var i = 0, len = this._records.length; i < len; i++) {
+      var i, len, results = [];
+      for (i = 0, len = this._records.length; i < len; i++) {
         var record = this._records[_i];
         results.push(record.toJSON());
       }
@@ -280,6 +285,8 @@
     Collection.prototype.get = function(index) {
       return this._records[index];
     };
+
+    _.extend(Collection, Event);
 
     return Collection;
 
@@ -309,6 +316,32 @@
 
   }());
 
+
+  // Add extend to all the classes
+  var extend = function(props) {
+    var parent = this;
+    var child;
+
+    if (props.constructor) {
+      child = props.constructor;
+    } else {
+      child = function() {
+        return parent.apply(this, arguments);
+      };
+    }
+    _.extend(child, parent);
+    var Surrogate = function() {
+      this.constructor = child;
+    };
+    Surrogate.prototype = parent.prototype;
+    child.prototype = new Surrogate();
+    if (props) { _.extend(child.prototype, props); }
+    child.__super__ = parent.prototype;
+    return child;
+  };
+
+
+  Model.extend = extend;
 
   // Export all the classes
   module.exports = {
