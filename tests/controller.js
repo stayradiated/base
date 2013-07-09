@@ -34,6 +34,13 @@
       controller.elements.should.have.property('.selector');
     });
 
+    it('should have events', function(done) {
+      controller.on('event', function() {
+        done();
+      });
+      controller.trigger('event');
+    });
+
   });
 
 }());
