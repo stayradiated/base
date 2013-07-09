@@ -24,6 +24,15 @@
 
     });
 
+    it('should create events if attrs.on is set', function(done) {
+      event = new Base.Event({
+        on: {
+          'event': done
+        }
+      });
+      event.trigger('event');
+    });
+
   });
 
 }());

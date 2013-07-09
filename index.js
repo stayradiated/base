@@ -59,8 +59,18 @@
 
     Event = (function () {
 
-        function Event() {
+        function Event(attrs) {
+            var key;
             this._events = {};
+            // Bind events specified in attrs
+            if (attrs && attrs.on) {
+                for (key in attrs.on) {
+                    if (attrs.on.hasOwnProperty(key)) {
+                        this.on(key, attrs.on[key]);
+                    }
+                }
+                delete attrs.on;
+            }
         }
 
         Event.prototype.on = function (events, fn) {
