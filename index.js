@@ -329,6 +329,7 @@
     View = (function () {
 
         function View(template, fromString) {
+            this.fromString = fromString;
             if (fromString) {
                 this.template = swig.compile(template);
             } else {
@@ -342,7 +343,13 @@
 
         // Render the template
         View.prototype.render = function (data) {
-            return this.template(data);
+            var html = '';
+            if (this.fromString) {
+                html = this.template(data);
+            } else {
+                html = this.template.render(data);
+            }
+            return html;
         };
 
         return View;
