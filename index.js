@@ -234,14 +234,14 @@
         inherit(Collection, Event);
 
         // Create a new instance of the model and add it to the collection
-        Collection.prototype.create = function (attrs) {
+        Collection.prototype.create = function (attrs, options) {
             var model = new this.model(attrs);
-            this.add(model);
+            this.add(model, options);
             return model;
         };
 
         // Add a model to the collection
-        Collection.prototype.add = function (model) {
+        Collection.prototype.add = function (model, options) {
 
             // Add to collection
             this._records.push(model);
@@ -258,8 +258,10 @@
                 self.remove(model);
             });
 
-            // Trigger create event
-            this.trigger('create:model', model);
+            // Only trigger create if silent is not set
+            if (!options || !options.silent) {
+              this.trigger('create:model', model);
+            }
 
         };
 
@@ -285,8 +287,7 @@
             var i, len, model;
             if (replace) { this._records = []; }
             for (i = 0, len = data.length; i < len; i += 1) {
-                model = new this.model(data[i]);
-                this._records.push(model);
+                this.create(data[i], { silent: true });
             }
             return this.trigger('refresh');
         };
