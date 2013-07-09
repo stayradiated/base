@@ -100,6 +100,7 @@
     Controller = (function () {
 
         function Controller(attrs) {
+            Controller.__super__.constructor.apply(this, arguments);
             if (!this.elements) { this.elements = {}; }
             if (!this.events) { this.events = {}; }
             include(this, attrs);
