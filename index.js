@@ -54,55 +54,6 @@
 
 
     /*
-     * CONTROLLER
-     */
-
-    Controller = (function () {
-
-        function Controller(attrs) {
-            if (!this.elements) { this.elements = {}; }
-            if (!this.events) { this.events = {}; }
-            include(this, attrs);
-            if (this.el) { this.bind(); }
-        }
-
-        Controller.prototype.bind = function (el) {
-            var selector, query, action, split, name, event;
-
-            // If el is not specified use this.el
-            if (!el) { el = this.el; }
-
-            // Cache elements
-            for (selector in this.elements) {
-                if (this.elements.hasOwnProperty(selector)) {
-                    name = this.elements[selector];
-                    this[name] = el.find(selector);
-                }
-            }
-
-            // Bind events
-            for (query in this.events) {
-                if (this.events.hasOwnProperty(query)) {
-                    action = this.events[query];
-                    split = query.indexOf(' ') + 1;
-                    event = query.slice(0, split || 9e9);
-                    selector = query.slice(split);
-                    if (selector.length > 0) {
-                        el.on(event, selector, this[action]);
-                    } else {
-                        el.on(event, this[action]);
-                    }
-                }
-            }
-
-        };
-
-        return Controller;
-
-    }());
-
-
-    /*
      * EVENT
      */
 
@@ -141,13 +92,66 @@
     }());
 
 
+
+    /*
+     * CONTROLLER
+     */
+
+    Controller = (function () {
+
+        function Controller(attrs) {
+            if (!this.elements) { this.elements = {}; }
+            if (!this.events) { this.events = {}; }
+            include(this, attrs);
+            if (this.el) { this.bind(); }
+        }
+
+        // Load Events
+        inherit(Controller, Event);
+
+        Controller.prototype.bind = function (el) {
+            var selector, query, action, split, name, event;
+
+            // If el is not specified use this.el
+            if (!el) { el = this.el; }
+
+            // Cache elements
+            for (selector in this.elements) {
+                if (this.elements.hasOwnProperty(selector)) {
+                    name = this.elements[selector];
+                    this[name] = el.find(selector);
+                }
+            }
+
+            // Bind events
+            for (query in this.events) {
+                if (this.events.hasOwnProperty(query)) {
+                    action = this.events[query];
+                    split = query.indexOf(' ') + 1;
+                    event = query.slice(0, split || 9e9);
+                    selector = query.slice(split);
+                    if (selector.length > 0) {
+                        el.on(event, selector, this[action]);
+                    } else {
+                        el.on(event, this[action]);
+                    }
+                }
+            }
+
+        };
+
+        return Controller;
+
+    }());
+
+
     /*
      * MODEL
      */
 
     Model = (function () {
 
-        Model = function (attrs) {
+        function Model(attrs) {
             var set, get, key, self = this;
 
             // Call super
@@ -183,7 +187,7 @@
                 }
             }
 
-        };
+        }
 
         // Load Events
         inherit(Model, Event);
@@ -220,10 +224,10 @@
 
     Collection = (function () {
 
-        Collection = function () {
+        function Collection() {
             Collection.__super__.constructor.apply(this, arguments);
             this._records = [];
-        };
+        }
 
         // Load Events
         inherit(Collection, Event);
