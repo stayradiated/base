@@ -42,8 +42,8 @@
   var Controller = (function() {
 
     function Controller(attrs) {
-      this.elements = {};
-      this.events = {};
+      if (!this.elements) { this.elements = {}; }
+      if (!this.events) { this.events = {}; }
       include(this, attrs);
       if (this.el) { this.bind(); }
     }
