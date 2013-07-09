@@ -335,7 +335,7 @@
 
   // Backbone like extending
   extend = function(attrs) {
-    parent = this;
+    var child, parent = this;
     if (!attrs) { attrs = {}; }
     if (attrs.hasOwnProperty('constructor')) {
       child = attrs.constructor;
