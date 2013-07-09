@@ -1,18 +1,16 @@
-/*global window*/
+/*jslint nomen: true*/
+/*global require, module*/
 
 (function () {
     "use strict";
 
-    // Only load jQuery if are running in a browser
-    if (typeof window !== 'undefined') {
-        var $ = require('jqueryify');
-    }
+    var swig, include, extend, inherit, Controller, Event, Model, Collection, View;
 
     // Use swig for templates
-    var swig = require('swig');
+    swig = require('swig');
 
     // Copy object properties
-    var include = function (to, from) {
+    include = function (to, from) {
         var key;
         for (key in from) {
             if (from.hasOwnProperty(key)) {
@@ -22,27 +20,44 @@
     };
 
     // CoffeeScript extend for classes
-    var __extend = function (child, parent) {
-        var key, ctor;
+    inherit = function (child, parent) {
+        var key, Klass;
         for (key in parent) {
             if (parent.hasOwnProperty(key)) {
                 child[key] = parent[key];
             }
         }
-        ctor = function () {
+        Klass = function () {
             this.constructor = child;
         };
-        ctor.prototype = parent.prototype;
-        child.prototype = new ctor();
+        Klass.prototype = parent.prototype;
+        child.prototype = new Klass();
         child.__super__ = parent.prototype;
         return child;
     };
+
+    // Backbone like extending
+    extend = function (attrs) {
+        var child, parent = this;
+        if (!attrs) { attrs = {}; }
+        if (attrs.hasOwnProperty('constructor')) {
+            child = attrs.constructor;
+        } else {
+            child = function () {
+                child.__super__.constructor.apply(this, arguments);
+            };
+        }
+        inherit(child, parent);
+        include(child.prototype, attrs);
+        return child;
+    };
+
 
     /*
      * CONTROLLER
      */
 
-    var Controller = (function () {
+    Controller = (function () {
 
         function Controller(attrs) {
             if (!this.elements) { this.elements = {}; }
@@ -91,7 +106,7 @@
      * EVENT
      */
 
-    var Event = (function () {
+    Event = (function () {
 
         function Event() {
             this._events = {};
@@ -102,7 +117,7 @@
             // Allow multiple events to be set at once such as:
             // event.on('update change refresh', this.render);
             events = events.split(' ');
-            for (i = 0, len = events.length; i < len; i++) {
+            for (i = 0, len = events.length; i < len; i += 1) {
                 event = events[i];
                 if (!this._events[event]) { this._events[event] = []; }
                 this._events[event].push(fn);
@@ -115,7 +130,7 @@
             args = 2 <= arguments.length ? [].slice.call(arguments, 1) : [];
             actions = this._events[event];
             if (actions) {
-                for (i = 0, len = actions.length; i < len; i++) {
+                for (i = 0, len = actions.length; i < len; i += 1) {
                     actions[i].apply(actions[i], args);
                 }
             }
@@ -130,7 +145,7 @@
      * MODEL
      */
 
-    var Model = (function () {
+    Model = (function () {
 
         Model = function (attrs) {
             var set, get, key, self = this;
@@ -171,7 +186,7 @@
         };
 
         // Load Events
-        __extend(Model, Event);
+        inherit(Model, Event);
 
         // Load data into the model
         Model.prototype.refresh = function (data, replace) {
@@ -203,7 +218,7 @@
      * COLLECTION
      */
 
-    var Collection = (function () {
+    Collection = (function () {
 
         Collection = function () {
             Collection.__super__.constructor.apply(this, arguments);
@@ -211,7 +226,7 @@
         };
 
         // Load Events
-        __extend(Collection, Event);
+        inherit(Collection, Event);
 
         // Create a new instance of the model and add it to the collection
         Collection.prototype.create = function (attrs) {
@@ -262,10 +277,10 @@
         // Append or replace the data in the collection
         // Doesn't trigger any events when updating the array apart from 'refresh'
         Collection.prototype.refresh = function (data, replace) {
-            var i, len;
+            var i, len, model;
             if (replace) { this._records = []; }
-            for (i = 0, len = data.length; i < len; i++) {
-                var model = new this.model(data[i]);
+            for (i = 0, len = data.length; i < len; i += 1) {
+                model = new this.model(data[i]);
                 this._records.push(model);
             }
             return this.trigger('refresh');
@@ -278,9 +293,9 @@
 
         // Convert the collection into an array of objects
         Collection.prototype.toJSON = function () {
-            var i, len, results = [];
-            for (i = 0, len = this._records.length; i < len; i++) {
-                var record = this._records[i];
+            var i, len, record, results = [];
+            for (i = 0, len = this._records.length; i < len; i += 1) {
+                record = this._records[i];
                 results.push(record.toJSON());
             }
             return results;
@@ -311,7 +326,7 @@
      * VIEW
      */
 
-    var View = (function () {
+    View = (function () {
 
         function View(template, fromString) {
             if (fromString) {
@@ -333,23 +348,6 @@
         return View;
 
     }());
-
-
-    // Backbone like extending
-    var extend = function (attrs) {
-        var child, parent = this;
-        if (!attrs) { attrs = {}; }
-        if (attrs.hasOwnProperty('constructor')) {
-            child = attrs.constructor;
-        } else {
-            child = function () {
-                child.__super__.constructor.apply(this, arguments);
-            };
-        }
-        __extend(child, parent);
-        include(child.prototype, attrs);
-        return child;
-    };
 
     // Add the extend to method to all classes, except Event;
     Event.extend = Controller.extend = Model.extend = Collection.extend = View.extend = extend;
