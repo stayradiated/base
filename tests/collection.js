@@ -10,10 +10,6 @@
     it('should create a new instance', function() {
 
       var Model = Base.Model.extend({
-        constructor: function() {
-          // TODO: Find out why I need to specify the constructor
-          Model.__super__.constructor.apply(this, arguments);
-        },
         defaults: {
           name: ''
         }
