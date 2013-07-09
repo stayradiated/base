@@ -349,7 +349,7 @@
 
     }());
 
-    // Add the extend to method to all classes, except Event;
+    // Add the extend to method to all classes
     Event.extend = Controller.extend = Model.extend = Collection.extend = View.extend = extend;
 
     // Export all the classes
