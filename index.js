@@ -1,5 +1,5 @@
 /*jslint nomen: true*/
-/*global require, module*/
+/*global window, require, module*/
 
 (function () {
     "use strict";
@@ -7,7 +7,11 @@
     var swig, include, extend, inherit, Controller, Event, Model, Collection, View;
 
     // Use swig for templates
-    swig = require('swig');
+    if (typeof window.swig === 'undefined') {
+      swig = require('swig');
+    } else {
+      swig = window.swig;
+    }
 
     // Copy object properties
     include = function (to, from) {
@@ -140,8 +144,8 @@
                     action = this.events[query];
                     split = query.indexOf(' ') + 1;
                     event = query.slice(0, split || 9e9);
-                    selector = query.slice(split);
-                    if (selector.length > 0) {
+                    if (split > 0) {
+                        selector = query.slice(split);
                         el.on(event, selector, this[action]);
                     } else {
                         el.on(event, this[action]);
@@ -238,6 +242,7 @@
         function Collection() {
             Collection.__super__.constructor.apply(this, arguments);
             this._records = [];
+            this.length = 0;
         }
 
         // Load Events
@@ -254,7 +259,9 @@
         Collection.prototype.add = function (model, options) {
 
             // Add to collection
+            model.collection = this;
             this._records.push(model);
+            this.length = this._records.length;
             var self = this;
 
             // Bubble change event
@@ -280,6 +287,7 @@
         Collection.prototype.remove = function (model) {
             var index = this._records.indexOf(model);
             this._records.splice(index, 1);
+            this.length = this._records.length;
             this.trigger('change');
         };
 
@@ -305,6 +313,11 @@
         // Loop over each record in the collection
         Collection.prototype.forEach = function () {
             return Array.prototype.forEach.apply(this._records, arguments);
+        };
+
+        // Get the index of the item
+        Collection.prototype.indexOf = function() {
+            return Array.prototype.indexOf.apply(this._records, arguments);
         };
 
         // Convert the collection into an array of objects
