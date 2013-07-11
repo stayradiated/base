@@ -76,29 +76,48 @@
                 delete attrs.on;
             }
         }
-
+        
+        // Bind an event to a function
+        // Returns an event ID so you can unbind it later
         Event.prototype.on = function (events, fn) {
-            var i, len, event;
+            var ids, id, i, len, event;
             // Allow multiple events to be set at once such as:
             // event.on('update change refresh', this.render);
+            ids = [];
             events = events.split(' ');
             for (i = 0, len = events.length; i < len; i += 1) {
                 event = events[i];
-                if (!this._events[event]) { this._events[event] = []; }
-                this._events[event].push(fn);
+                // If the event has never been listened to before
+                if (!this._events[event]) {
+                    this._events[event] = {};
+                    this._events[event].index = 0;
+                }
+                // Increment the index and assign an ID
+                id = this._events[event].index += 1;
+                this._events[event][id] = fn;
+                ids.push(id);
             }
+            return ids;
         };
 
+        // Trigger an event
         Event.prototype.trigger = function (event) {
-            var args, actions, i, len;
+            var args, actions, i;
             // args is a splat
             args = 2 <= arguments.length ? [].slice.call(arguments, 1) : [];
             actions = this._events[event];
             if (actions) {
-                for (i = 0, len = actions.length; i < len; i += 1) {
-                    actions[i].apply(actions[i], args);
+                for (i in actions) {
+                    if (actions.hasOwnProperty(i) && i !== 'index') {
+                        actions[i].apply(actions[i], args);
+                    }
                 }
             }
+        };
+
+        // Remove a listener from an event
+        Event.prototype.off = function (event, id) {
+          delete this._events[event][id];
         };
 
         return Event;
@@ -119,6 +138,7 @@
             if (!this.events) { this.events = {}; }
             include(this, attrs);
             if (this.el) { this.bind(); }
+            this.listening = [];
         }
 
         // Load Events
@@ -153,6 +173,63 @@
                 }
             }
 
+        };
+
+        Controller.prototype.unbind = function(el) {
+            var selector, query, action, split, name, event;
+
+            // If el is not specified use this.el
+            if (!el) { el = this.el; }
+
+            // Delete elements
+            for (selector in this.elements) {
+                if (this.elements.hasOwnProperty(selector)) {
+                    name = this.elements[selector];
+                    delete this[name];
+                }
+            }
+
+            // Unbind events
+            for (query in this.events) {
+                if (this.events.hasOwnProperty(query)) {
+                    action = this.events[query];
+                    split = query.indexOf(' ') + 1;
+                    event = query.slice(0, split || 9e9);
+                    if (split > 0) {
+                        selector = query.slice(split);
+                        el.off(event, selector);
+                    } else {
+                        el.off(event);
+                    }
+                }
+            }
+
+        };
+
+        Controller.prototype.listen = function (model, attrs) {
+          var event, ids, listener;
+          listener = [model, {}];
+          for (event in attrs) {
+              if (attrs.hasOwnProperty(event)) {
+                  ids = model.on(event, attrs[event]);
+                  listener[1][event] = ids;
+              }
+          }
+          this.listening.push(listener);
+        };
+
+        Controller.prototype.unlisten = function () {
+            var i, len, model, events, event;
+            for (i = 0, len = this.listening.length; i < len; i += 1) {
+                model = this.listening[i][0];
+                events = this.listening[i][1];
+                for (event in events) {
+                    if (events.hasOwnProperty(event)) {
+                        model.off(event, events[event]);
+                    }
+                }
+            }
+            this.listening = [];
         };
 
         return Controller;
