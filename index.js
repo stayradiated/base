@@ -261,6 +261,7 @@
                     // Don't do anything if the value doesn't change
                     if (value === self._data[key]) { return; }
                     self._data[key] = value;
+                    self.trigger('change', key, value);
                     self.trigger('change:' + key, value);
                 };
             };
@@ -346,8 +347,8 @@
             var self = this;
 
             // Bubble change event
-            model.on('change', function () {
-                self.trigger('change:model', model);
+            model.on('change', function (key, value) {
+                self.trigger('change:model', model, key, value);
             });
 
             // Bubble destroy event
