@@ -286,7 +286,10 @@
 
         // Load data into the model
         Model.prototype.refresh = function (data, replace) {
-            if (replace) { this._data = this.defaults; }
+            if (replace) {
+              this._data = {};
+              include(this._data, this.defaults);
+            }
             include(this._data, data);
             this.trigger('refresh');
             return this;
@@ -294,6 +297,7 @@
 
         // Destroy the model
         Model.prototype.destroy = function () {
+            this.trigger('before:destroy');
             delete this._data;
             this.trigger('destroy');
             return this;
@@ -347,6 +351,9 @@
             });
 
             // Bubble destroy event
+            model.on('before:destroy', function() {
+                self.trigger('before:destroy:model', model);
+            });
             model.on('destroy', function () {
                 self.trigger('destroy:model', model);
                 self.remove(model);
