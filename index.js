@@ -7,7 +7,7 @@
     var swig, include, extend, inherit, Controller, Event, Model, Collection, View;
 
     // Use swig for templates
-    if (typeof window.swig === 'undefined') {
+    if (typeof global !== 'undefined' && global.process) {
       swig = require('swig');
     } else {
       swig = window.swig;
