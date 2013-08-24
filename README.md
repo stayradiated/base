@@ -60,6 +60,23 @@ Controllers allow you to cache elements and bind DOM events
 
 ## Events
 
+### Events.on( events, fn )
+
+Listen for an event.
+
+- `events` can be an array of events or just a single event.
+- `fn` is the callback to run when the event is triggered.
+
+### Events.trigger( event )
+
+Trigger an event
+
+### Events.off( event, id )
+
+Stop listening for an event
+
+
+
 ## Views
 
 ## JavaScript
