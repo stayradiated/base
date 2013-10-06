@@ -1,6 +1,6 @@
 {
   "name": "base",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "A tiny and simple javascript MVC framework",
   "main": "index.js",
   "repository": {
@@ -11,9 +11,6 @@
   "license": "BSD",
   "bugs": {
     "url": "https://github.com/stayradiated/Base/issues"
-  },
-  "dependencies": {
-    "swig": "*"
   },
   "devDependencies": {
     "should": "*"

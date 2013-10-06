@@ -1,19 +1,9 @@
-/*jslint nomen: true*/
-/*global window, require, module*/
+/*jslint node: true, nomen: true*/
 
 (function () {
     "use strict";
 
-    var swig, include, extend, inherit, Controller, Event, Model, Collection, View;
-
-    // Use swig for templates
-    if (typeof window !== 'undefined' && typeof window.swig !== 'undefined') {
-      swig = window.swig;
-    } else if (typeof require !== 'undefined') {
-      swig = require('swig');
-    } else {
-      console.log('[Base] Warning! Swig could not be found or loaded');
-    }
+    var include, extend, inherit, Controller, Event, Model, Collection;
 
     // Copy object properties
     include = function (to, from) {
@@ -78,7 +68,7 @@
                 delete attrs.on;
             }
         }
-        
+
         // Bind an event to a function
         // Returns an event ID so you can unbind it later
         Event.prototype.on = function (events, fn) {
@@ -119,7 +109,7 @@
 
         // Remove a listener from an event
         Event.prototype.off = function (event, id) {
-          delete this._events[event][id];
+            delete this._events[event][id];
         };
 
         return Event;
@@ -177,7 +167,7 @@
 
         };
 
-        Controller.prototype.unbind = function(el) {
+        Controller.prototype.unbind = function (el) {
             var selector, query, action, split, name, event;
 
             // If el is not specified use this.el
@@ -209,15 +199,15 @@
         };
 
         Controller.prototype.listen = function (model, attrs) {
-          var event, ids, listener;
-          listener = [model, {}];
-          for (event in attrs) {
-              if (attrs.hasOwnProperty(event)) {
-                  ids = model.on(event, attrs[event]);
-                  listener[1][event] = ids;
-              }
-          }
-          this.listening.push(listener);
+            var event, ids, listener;
+            listener = [model, {}];
+            for (event in attrs) {
+                if (attrs.hasOwnProperty(event)) {
+                    ids = model.on(event, attrs[event]);
+                    listener[1][event] = ids;
+                }
+            }
+            this.listening.push(listener);
         };
 
         Controller.prototype.unlisten = function () {
@@ -290,8 +280,8 @@
         // Load data into the model
         Model.prototype.refresh = function (data, replace) {
             if (replace) {
-              this._data = {};
-              include(this._data, this.defaults);
+                this._data = {};
+                include(this._data, this.defaults);
             }
             include(this._data, data);
             this.trigger('refresh');
@@ -354,7 +344,7 @@
             });
 
             // Bubble destroy event
-            model.on('before:destroy', function() {
+            model.on('before:destroy', function () {
                 self.trigger('before:destroy:model', model);
             });
             model.on('destroy', function () {
@@ -364,7 +354,7 @@
 
             // Only trigger create if silent is not set
             if (!options || !options.silent) {
-              this.trigger('create:model', model);
+                this.trigger('create:model', model);
             }
 
         };
@@ -403,7 +393,7 @@
         };
 
         // Get the index of the item
-        Collection.prototype.indexOf = function() {
+        Collection.prototype.indexOf = function () {
             return Array.prototype.indexOf.apply(this._records, arguments);
         };
 
@@ -437,51 +427,15 @@
 
     }());
 
-
-    /*
-     * VIEW
-     */
-
-    View = (function () {
-
-        function View(template, fromString) {
-            this.fromString = fromString;
-            if (fromString) {
-                this.template = swig.compile(template);
-            } else {
-                var path = template + '.html';
-                this.template = swig.compileFile(path);
-            }
-        }
-
-        // Expose swig
-        View.swig = swig;
-
-        // Render the template
-        View.prototype.render = function (data) {
-            var html = '';
-            if (this.fromString) {
-                html = this.template(data);
-            } else {
-                html = this.template.render(data);
-            }
-            return html;
-        };
-
-        return View;
-
-    }());
-
     // Add the extend to method to all classes
-    Event.extend = Controller.extend = Model.extend = Collection.extend = View.extend = extend;
+    Event.extend = Controller.extend = Model.extend = Collection.extend = extend;
 
     // Export all the classes
     module.exports = {
         Event: Event,
         Controller: Controller,
         Model: Model,
-        Collection: Collection,
-        View: View
+        Collection: Collection
     };
 
 }());

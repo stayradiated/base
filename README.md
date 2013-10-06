@@ -75,10 +75,6 @@ Trigger an event
 
 Stop listening for an event
 
-
-
-## Views
-
 ## JavaScript
 
 To use with JavaScript (instead of CoffeeScript) you can use the `extend`
