@@ -369,10 +369,10 @@
         };
 
         // Reorder the collection
-        Collection.prototype.move = function (record, pos) {
-            var index = this._records.indexOf(record);
+        Collection.prototype.move = function (model, pos) {
+            var index = this._records.indexOf(model);
             this._records.splice(index, 1);
-            this._records.splice(pos, 0, record);
+            this._records.splice(pos, 0, model);
             this.trigger('change');
         };
 
