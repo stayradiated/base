@@ -1,7 +1,7 @@
 /*jslint node: true, nomen: true*/
 
 (function () {
-    "use strict";
+    'use strict';
 
     var include, extend, inherit, Controller, Event, Model, Collection;
 
@@ -379,7 +379,7 @@
         // Append or replace the data in the collection
         // Doesn't trigger any events when updating the array apart from 'refresh'
         Collection.prototype.refresh = function (data, replace) {
-            var i, len, model;
+            var i, len;
             if (replace) { this._records = []; }
             for (i = 0, len = data.length; i < len; i += 1) {
                 this.create(data[i], { silent: true });
