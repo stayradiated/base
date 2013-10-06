@@ -3,7 +3,7 @@
 (function () {
     'use strict';
 
-    var include, extend, inherit, Controller, Event, Model, Collection;
+    var include, extend, inherit, Module, Controller, Event, Model, Collection;
 
     // Copy object properties
     include = function (to, from) {
@@ -48,6 +48,48 @@
         return child;
     };
 
+    /*
+     * MODULE
+     *
+     * Module magic taken from Spine
+     */
+
+    Module = {
+
+        include: function (obj) {
+            var key;
+            if (!obj) {
+                throw new Error('include(obj) requires obj');
+            }
+            for (key in obj) {
+                if (obj.hasOwnProperty(key) && key !== 'included' && key !== 'extended') {
+                    this.prototype[key] = obj[key];
+                }
+            }
+            if (obj.hasOwnProperty('included')) {
+                obj.included.apply(this);
+            }
+            return this;
+        },
+
+        extend: function (obj) {
+            var key;
+            if (!obj) {
+                throw new Error('extend(obj) requires obj');
+            }
+            for (key in obj) {
+                if (obj.hasOwnProperty(key) && key !== 'included' && key !== 'extended') {
+                    this[key] = obj[key];
+                }
+            }
+            if (obj.hasOwnProperty('extended')) {
+                obj.extended.apply(this);
+            }
+            return this;
+        }
+
+    };
+
 
     /*
      * EVENT
@@ -68,6 +110,8 @@
                 delete attrs.on;
             }
         }
+
+        include(Event, Module);
 
         // Bind an event to a function
         // Returns an event ID so you can unbind it later
@@ -135,6 +179,7 @@
 
         // Load Events
         inherit(Controller, Event);
+        include(Controller, Module);
 
         Controller.prototype.bind = function (el) {
             var selector, query, action, split, name, event;
@@ -276,6 +321,7 @@
 
         // Load Events
         inherit(Model, Event);
+        include(Model, Module);
 
         // Load data into the model
         Model.prototype.refresh = function (data, replace) {
@@ -321,6 +367,7 @@
 
         // Load Events
         inherit(Collection, Event);
+        include(Collection, Module);
 
         // Create a new instance of the model and add it to the collection
         Collection.prototype.create = function (attrs, options) {
