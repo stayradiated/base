@@ -1,19 +1,17 @@
 Base
 ====
 
-_A tiny and simple javascript framework based on spine.js_
-
-It was written to be used specifically with NodeJS based projects, such as
-Node-Webkit, but it could be easily edited to work in the browser.
+> A minimal javascript MVC framework for modern browsers
 
 ## Installation
 
 This will probably never be published to the NPM registry, so the best way to
 install it is to use `npm link`.
 
-    git clone https://github.com/stayradiated/base.git
-    cd base
-    sudo npm link
+    cd ~/npm_modules
+    git clone https://github.com/stayradiated/Base.git
+    cd Base
+    npm link
     cd ~/project
     npm link base
 
@@ -32,10 +30,13 @@ to work you must set all model properties using the `defaults` object.
 
     task = new Task()
 
-    task.on 'change:name', render
+    task.on 'change:name', ->
+        console.log 'changing name'
 
     task.name = 'Finish project'
     # will trigger change:name
+
+
 
 ## Controller
 
@@ -58,7 +59,25 @@ Controllers allow you to cache elements and bind DOM events
 
 ## Collections
 
+A collection is just an array of models.
+
+- create(attrs, options)
+- add(model, options)
+- remove(model)
+- move(model, position)
+- refresh(data, replace)
+- foreach()
+- indexOf()
+- toJSON()
+- first()
+- last()
+- get(index)
+
 ## Events
+
+You can use event methods on Models, Collections and Controllers.
+
+    var event = new Event();
 
 ### Events.on( events, fn )
 
@@ -67,18 +86,44 @@ Listen for an event.
 - `events` can be an array of events or just a single event.
 - `fn` is the callback to run when the event is triggered.
 
-### Events.trigger( event )
+It returns the id of the event so you can remove it later.
 
-Trigger an event
+    var id = event.on('change', function (data) {
+        console.log('got some', data);
+    });
+
+### Events.trigger( event, data.. )
+
+Trigger an event.
+
+You can pass varibles to the event listener by including it as another
+argument.
+
+    event.trigger('change', 'data');
+    // 'got some data'
 
 ### Events.off( event, id )
 
 Stop listening for an event
 
-## JavaScript
+    event.off('change', id);
 
-To use with JavaScript (instead of CoffeeScript) you can use the `extend`
-method.
+## Using with CoffeeScript
+
+You can just use the `class` and `extends` keyword. 
+
+    Base = require 'base'
+
+    class Task extends Base.Model
+        defaults:
+            name: ''
+            completed: false
+        constructor: ->
+            console.log 'Created a new task'
+
+## Using with JavaScript
+
+To use with JavaScript you can use the `extend` method.
     
     var Base = require('base');
 
