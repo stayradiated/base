@@ -303,6 +303,9 @@
                 }
             }
 
+            // Stop listening for events
+            this.stopListening();
+
         };
 
         return Controller;
@@ -407,6 +410,11 @@
         inherit(Collection, Event);
         include(Collection, Module);
 
+        // Access all models
+        Collection.prototype.all = function () {
+            return this._models;
+        };
+
         // Create a new instance of the model and add it to the collection
         Collection.prototype.create = function (attrs, options) {
             var model = new this.model(attrs);
@@ -420,8 +428,12 @@
             var id, index, self = this;
 
             // Set ID
-            id = model.id = 'c-' + this._index;
-            this._index += 1;
+            if (model.id) {
+                id = model.id;
+            } else {
+                id = model.id = 'c-' + this._index;
+                this._index += 1;
+            }
 
             // Add to collection
             model.collection = this;
@@ -486,7 +498,17 @@
 
         // Loop over each record in the collection
         Collection.prototype.forEach = function () {
-            this._models.forEach.apply(this._models, arguments);
+            return this._models.forEach.apply(this._models, arguments);
+        };
+
+        // Filter the models
+        Collection.prototype.filter = function () {
+            return this._models.filter.apply(this._models, arguments);
+        };
+
+        // Sort the models. Does not alter original order
+        Collection.prototype.sort = function () {
+            return this._models.sort.apply(this._models, arguments);
         };
 
         // Get the index of the item
@@ -501,9 +523,8 @@
         // Convert the collection into an array of objects
         Collection.prototype.toJSON = function () {
             var i, id, len, record, results = [];
-            for (i = 0, len = this._order.length; i < len; i += 1) {
-                id = this._order[i];
-                record = this._models[id];
+            for (i = 0, len = this._models.length; i < len; i += 1) {
+                record = this._models[i];
                 results.push(record.toJSON());
             }
             return results;
@@ -528,6 +549,11 @@
         // Return a specified record in the collection
         Collection.prototype.at = function (index) {
             return this._models[index];
+        };
+
+        // Check if a model exists in the collection
+        Collection.prototype.exists = function (model) {
+            return this.indexOf(model) > -1;
         };
 
         return Collection;
