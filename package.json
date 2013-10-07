@@ -1,11 +1,11 @@
 {
   "name": "base",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A tiny and simple javascript MVC framework",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://stayradiated@github.com/stayradiated/Base.git"
+    "url": "https://github.com/stayradiated/Base.git"
   },
   "author": "George Czabania",
   "license": "BSD",
@@ -13,6 +13,6 @@
     "url": "https://github.com/stayradiated/Base/issues"
   },
   "devDependencies": {
-    "should": "*"
+      "should": "1.2.x"
   }
 }

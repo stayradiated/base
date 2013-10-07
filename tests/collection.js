@@ -1,78 +1,111 @@
-(function() {
+/*global describe, it*/
 
-  var Base = require('../index.js');
-  var should = require('should');
+(function () {
 
-  describe('Collection', function() {
+    'use strict';
 
-    var collection;
+    var Base, should;
 
-    it('should create a new instance', function() {
+    Base = require('../index.js');
+    should = require('should');
 
-      var Model = Base.Model.extend({
-        defaults: {
-          name: ''
-        }
-      });
+    describe('Collection', function () {
 
-      var Collection = Base.Collection.extend({
-        model: Model 
-      });
+        var collection, Model;
 
-      collection = new Collection();
+        Model = Base.Model.extend({
+            defaults: {
+                name: ''
+            }
+        });
 
+        it('should create a new instance', function () {
+            var Collection = Base.Collection.extend({
+                model: Model
+            });
+            collection = new Collection();
+        });
+
+        it('should create a record', function () {
+            var model = collection.create({
+                name: 'zero'
+            });
+            model.name.should.equal('zero');
+        });
+
+        it('should add a record', function () {
+            var model = new Model({
+                name: 'one'
+            });
+            collection.add(model);
+            collection.at(1).name.should.equal('one');
+        });
+
+        it('should remove a record', function () {
+            var model, length = collection.length;
+            model = collection.create({
+                name: 'I am going to be removed'
+            });
+            collection.remove(model);
+            collection.length.should.equal(length);
+        });
+
+        it('should add multiple records at once using refresh', function () {
+            collection.refresh([
+                { name: 'two' },
+                { name: 'three' },
+                { name: 'four' }
+            ]);
+            collection.length.should.equal(5);
+        });
+
+        it('should move a record to a new position', function () {
+            var current, record;
+            current = collection.at(3);
+            record = collection.at(2);
+            collection.move(record, 3);
+            collection.at(3).should.eql(record);
+            collection.at(2).should.eql(current);
+        });
+
+        it('should get the index of the model', function () {
+            var model = collection.create({
+                name: 'five'
+            });
+            collection.indexOf(model.id).should.equal(collection.length - 1);
+            collection.indexOf('null').should.equal(-1);
+        });
+
+        it('should get the first record', function () {
+            var first = collection.first();
+            first.name.should.equal('zero');
+        });
+
+        it('should get the last record', function () {
+            collection.create({
+                name: 'six'
+            });
+            var last = collection.last();
+            last.name.should.equal('six');
+        });
+
+        it('should get a record by its position', function () {
+            var model = collection.at(1);
+            model.name.should.equal('one');
+        });
+
+        it('should get a record by its id', function () {
+            var id = collection.create({
+                name: 'seven'
+            }).id;
+            collection.get(id).name.should.equal('seven');
+        });
+
+        it('should loop through all the records', function () {
+            var length = collection.length;
+            collection.forEach(function (record, index) {
+                record.should.eql(collection.at(index));
+            });
+        });
     });
-
-    it('should add a record', function() {
-
-      var name = 'zero';
-
-      var model = collection.create({
-        name: name
-      });
-
-      model.name.should.equal(name);
-
-    });
-
-    it('should get the first record', function() {
-      collection.first().should.eql(collection._records[0]);
-    });
-
-    it('should add multiple records at once using refresh', function() {
-      collection.refresh([
-        { name: 'one' },
-        { name: 'two' },
-        { name: 'three' }
-      ]);
-      collection._records.length.should.equal(4);
-    });
-
-    it('should get the last record', function() {
-      var records = collection._records;
-      collection.last().should.eql(records[records.length - 1]);
-    });
-
-    it('should get an arbitrary record', function() {
-      collection.get(1).should.eql(collection._records[1]);
-    });
-
-    it('should move a record to a new position', function() {
-      var current = collection.get(3);
-      var record = collection.get(2);
-      collection.move(record, 3);
-      collection.get(3).should.eql(record);
-      collection.get(2).should.eql(current);
-    });
-
-    it('should loop through all the records', function(done) {
-      var length = collection._records.length;
-      collection.forEach(function(record, index) {
-        record.should.eql(collection.get(index));
-        if (index === length - 1) { done(); }
-      });
-    });
-
-  });
-
 }());

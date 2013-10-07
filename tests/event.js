@@ -33,6 +33,46 @@
       event.trigger('event');
     });
 
+    describe('- Remembered events', function () {
+
+        var obj = new Base.Event();
+        var obj2 = new Base.Event();
+        var listener = new Base.Event();
+
+        it('#start listening', function (done) {
+
+            listener.listen([
+                obj, {
+                    'done': done,
+                    'fail': function () {
+                        throw new Error('fail');
+                    }
+                }
+            ]);
+
+            obj.trigger('done');
+
+        });
+
+        it('#stop listening', function (done) {
+
+            listener.listen(obj2, {
+                'done': done 
+            });
+
+            // Only stop listening to obj
+            listener.stopListening(obj);
+
+            // This shouldn't trigger the error message
+            obj.trigger('fail');
+
+            // This should still trigger the done() function
+            obj2.trigger('done');
+
+        });
+
+    });
+
   });
 
 }());

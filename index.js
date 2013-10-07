@@ -56,7 +56,7 @@
 
     Module = {
 
-        include: function (obj) {
+        includes: function (obj) {
             var key;
             if (!obj) {
                 throw new Error('include(obj) requires obj');
@@ -72,7 +72,7 @@
             return this;
         },
 
-        extend: function (obj) {
+        extends: function (obj) {
             var key;
             if (!obj) {
                 throw new Error('extend(obj) requires obj');
@@ -100,6 +100,7 @@
         function Event(attrs) {
             var key;
             this._events = {};
+            this._listening = [];
             // Bind events specified in attrs
             if (attrs && attrs.on) {
                 for (key in attrs.on) {
@@ -153,13 +154,75 @@
 
         // Remove a listener from an event
         Event.prototype.off = function (event, id) {
+            var i, len;
+            if (Array.isArray(id)) {
+                for (i = 0, len = id.length; i < len; i += 1) {
+                    this.off(event, id[i]);
+                }
+                return;
+            }
             delete this._events[event][id];
+        };
+
+        /**
+         * Listen to multiple events from multiple objects
+         * Use this.stopListening to stop listening to them all
+         *
+         * Example:
+         *
+         *   this.listen(object, {
+         *      'create change': this.render,
+         *      'remove': this.remove
+         *   });
+         *
+         *   this.listen([
+         *      objectOne, {
+         *          'create': this.render,
+         *          'remove': this.remove
+         *      },
+         *      objectTwo, {
+         *          'change': 'this.render
+         *      }
+         *   ]);
+         *
+         */
+        Event.prototype.listen = function (obj, attrs) {
+            var i, len, event, listener;
+            if (Array.isArray(obj)) {
+                for (i = 0, len = obj.length; i < len; i += 2) {
+                    this.listen(obj[i], obj[i + 1]);
+                }
+                return;
+            }
+            listener = [obj, {}];
+            for (event in attrs) {
+                if (attrs.hasOwnProperty(event)) {
+                    listener[1][event] = obj.on(event, attrs[event]);
+                }
+            }
+            this._listening.push(listener);
+        };
+
+        // Stop listening to all events
+        Event.prototype.stopListening = function (object) {
+            var i, len, obj, events, event;
+            for (i = 0, len = this._listening.length; i < len; i += 1) {
+                obj = this._listening[i][0];
+                if (!object || object === obj) {
+                    events = this._listening[i][1];
+                    for (event in events) {
+                        if (events.hasOwnProperty(event)) {
+                            obj.off(event, events[event]);
+                        }
+                    }
+                }
+            }
+            this._listening = [];
         };
 
         return Event;
 
     }());
-
 
 
     /*
@@ -174,7 +237,6 @@
             if (!this.events) { this.events = {}; }
             include(this, attrs);
             if (this.el) { this.bind(); }
-            this.listening = [];
         }
 
         // Load Events
@@ -241,32 +303,6 @@
                 }
             }
 
-        };
-
-        Controller.prototype.listen = function (model, attrs) {
-            var event, ids, listener;
-            listener = [model, {}];
-            for (event in attrs) {
-                if (attrs.hasOwnProperty(event)) {
-                    ids = model.on(event, attrs[event]);
-                    listener[1][event] = ids;
-                }
-            }
-            this.listening.push(listener);
-        };
-
-        Controller.prototype.unlisten = function () {
-            var i, len, model, events, event;
-            for (i = 0, len = this.listening.length; i < len; i += 1) {
-                model = this.listening[i][0];
-                events = this.listening[i][1];
-                for (event in events) {
-                    if (events.hasOwnProperty(event)) {
-                        model.off(event, events[event]);
-                    }
-                }
-            }
-            this.listening = [];
         };
 
         return Controller;
@@ -361,8 +397,10 @@
 
         function Collection() {
             Collection.__super__.constructor.apply(this, arguments);
-            this._records = [];
-            this.length = 0;
+            this.length  = 0;
+            this._index  = 0;
+            this._models = [];
+            this._lookup = {};
         }
 
         // Load Events
@@ -379,24 +417,30 @@
         // Add a model to the collection
         Collection.prototype.add = function (model, options) {
 
+            var id, index, self = this;
+
+            // Set ID
+            id = model.id = 'c-' + this._index;
+            this._index += 1;
+
             // Add to collection
             model.collection = this;
-            this._records.push(model);
-            this.length = this._records.length;
-            var self = this;
+            index = this._models.push(model) - 1;
+            this._lookup[id] = index;
+            this.length += 1;
 
-            // Bubble change event
-            model.on('change', function (key, value) {
-                self.trigger('change:model', model, key, value);
-            });
-
-            // Bubble destroy event
-            model.on('before:destroy', function () {
-                self.trigger('before:destroy:model', model);
-            });
-            model.on('destroy', function () {
-                self.trigger('destroy:model', model);
-                self.remove(model);
+            // Bubble events
+            this.listen(model, {
+                'change': function (key, value) {
+                    self.trigger('change:model', model, key, value);
+                },
+                'before:destroy': function () {
+                    self.trigger('before:destroy:model', model);
+                },
+                'destroy': function () {
+                    self.trigger('destroy:model', model);
+                    self.remove(model);
+                }
             });
 
             // Only trigger create if silent is not set
@@ -409,17 +453,20 @@
         // Remove a model from the collection
         // Does not destroy the model - just removes it from the array
         Collection.prototype.remove = function (model) {
-            var index = this._records.indexOf(model);
-            this._records.splice(index, 1);
-            this.length = this._records.length;
+            var index = this.indexOf(model);
+            this._models.splice(index, 1);
+            delete this._lookup[model.id];
+            this.length -= 1;
+            this.stopListening(model);
             this.trigger('change');
         };
 
         // Reorder the collection
         Collection.prototype.move = function (model, pos) {
-            var index = this._records.indexOf(model);
-            this._records.splice(index, 1);
-            this._records.splice(pos, 0, model);
+            var index = this.indexOf(model);
+            this._models.splice(index, 1);
+            this._models.splice(pos, 0, model);
+            this._lookup[model.id] = index;
             this.trigger('change');
         };
 
@@ -427,7 +474,10 @@
         // Doesn't trigger any events when updating the array apart from 'refresh'
         Collection.prototype.refresh = function (data, replace) {
             var i, len;
-            if (replace) { this._records = []; }
+            if (replace) {
+                this._models = [];
+                this._lookup = {};
+            }
             for (i = 0, len = data.length; i < len; i += 1) {
                 this.create(data[i], { silent: true });
             }
@@ -436,19 +486,24 @@
 
         // Loop over each record in the collection
         Collection.prototype.forEach = function () {
-            return Array.prototype.forEach.apply(this._records, arguments);
+            this._models.forEach.apply(this._models, arguments);
         };
 
         // Get the index of the item
-        Collection.prototype.indexOf = function () {
-            return Array.prototype.indexOf.apply(this._records, arguments);
+        Collection.prototype.indexOf = function (model) {
+            if (typeof model === 'string') {
+                // Convert model id to actual model
+                return this.indexOf(this.get(model));
+            }
+            return this._models.indexOf(model);
         };
 
         // Convert the collection into an array of objects
         Collection.prototype.toJSON = function () {
-            var i, len, record, results = [];
-            for (i = 0, len = this._records.length; i < len; i += 1) {
-                record = this._records[i];
+            var i, id, len, record, results = [];
+            for (i = 0, len = this._order.length; i < len; i += 1) {
+                id = this._order[i];
+                record = this._models[id];
                 results.push(record.toJSON());
             }
             return results;
@@ -456,19 +511,24 @@
 
         // Return the first record in the collection
         Collection.prototype.first = function () {
-            return this._records[0];
+            return this.at(0);
         };
 
         // Return the last record in the collection
         Collection.prototype.last = function () {
-            return this._records[this._records.length - 1];
+            return this.at(this.length - 1);
+        };
+
+        // Return the record by the id
+        Collection.prototype.get = function (id) {
+            var index = this._lookup[id];
+            return this.at(index);
         };
 
         // Return a specified record in the collection
-        Collection.prototype.get = function (index) {
-            return this._records[index];
+        Collection.prototype.at = function (index) {
+            return this._models[index];
         };
-
 
         return Collection;
 
