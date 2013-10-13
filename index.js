@@ -118,6 +118,9 @@
         // Returns an event ID so you can unbind it later
         Event.prototype.on = function (events, fn) {
             var ids, id, i, len, event;
+            if (typeof fn !== 'function') {
+                throw new Error('fn not function');
+            }
             // Allow multiple events to be set at once such as:
             // event.on('update change refresh', this.render);
             ids = [];
@@ -140,8 +143,12 @@
         // Trigger an event
         Event.prototype.trigger = function (event) {
             var args, actions, i;
-            // args is a splat
             args = 2 <= arguments.length ? [].slice.call(arguments, 1) : [];
+            // Is this a good idea?
+            if (event !== '*') {
+                // console.log('--', event, args, '\n')
+                this.trigger('*', event, args);
+            }
             actions = this._events[event];
             if (actions) {
                 for (i in actions) {
@@ -153,15 +160,18 @@
         };
 
         // Remove a listener from an event
-        Event.prototype.off = function (event, id) {
+        Event.prototype.off = function (events, id) {
             var i, len;
             if (Array.isArray(id)) {
                 for (i = 0, len = id.length; i < len; i += 1) {
-                    this.off(event, id[i]);
+                    this.off(events, id[i]);
                 }
                 return;
             }
-            delete this._events[event][id];
+            events = events.split(' ');
+            for (i = 0, len = events.length; i < len; i += 1) {
+                delete this._events[events[i]][id];
+            }
         };
 
         /**
@@ -332,20 +342,14 @@
             include(this._data, attrs);
 
             set = function (key) {
-                // Encapture key
                 return function (value) {
-                    // Don't do anything if the value doesn't change
-                    if (value === self._data[key]) { return; }
-                    self._data[key] = value;
-                    self.trigger('change', key, value);
-                    self.trigger('change:' + key, value);
+                    return self.set(key, value);
                 };
             };
 
             get = function (key) {
-                // Encapture key
                 return function () {
-                    return self._data[key];
+                    return self.get(key);
                 };
             };
 
@@ -361,6 +365,21 @@
         // Load Events
         inherit(Model, Event);
         include(Model, Module);
+
+        // Change a value
+        Model.prototype.set = function(key, value, options) {
+            if (value === this._data[key]) { return; }
+            this._data[key] = value;
+            if (!options || !options.silent) {
+                this.trigger('change', key, value);
+                this.trigger('change:' + key, value);
+            }
+        };
+
+        // Get a value
+        Model.prototype.get = function(key) {
+            return this._data[key];
+        };
 
         // Load data into the model
         Model.prototype.refresh = function (data, replace) {
@@ -382,8 +401,18 @@
         };
 
         // Convert the class instance into a simple object
-        Model.prototype.toJSON = function () {
-            return this._data;
+        Model.prototype.toJSON = function (strict) {
+            var key, json;
+            if (strict) {
+                for (key in this._defaults) {
+                    if (this._defaults.hasOwnProperty(key)) {
+                        json[key] = this._data[key];
+                    }
+                }
+            } else {
+                json = this._data;
+            }
+            return json;
         };
 
 
@@ -431,9 +460,12 @@
             if (model.id) {
                 id = model.id;
             } else {
-                id = model.id = 'c-' + this._index;
+                id = 'c-' + this._index;
                 this._index += 1;
+                model.set('id', id, {silent: true});
             }
+
+            console.log('\n++ id', model.id, model.get('id'));
 
             // Add to collection
             model.collection = this;
@@ -443,14 +475,13 @@
 
             // Bubble events
             this.listen(model, {
-                'change': function (key, value) {
-                    self.trigger('change:model', model, key, value);
+                '*': function(event, args) {
+                    args = args.slice(0);
+                    args.unshift(event + ':model', model);
+                    // console.log('++', event, ' -> ', self.type || self.className, self)
+                    self.trigger.apply(self, args);
                 },
                 'before:destroy': function () {
-                    self.trigger('before:destroy:model', model);
-                },
-                'destroy': function () {
-                    self.trigger('destroy:model', model);
                     self.remove(model);
                 }
             });
@@ -458,6 +489,7 @@
             // Only trigger create if silent is not set
             if (!options || !options.silent) {
                 this.trigger('create:model', model);
+                this.trigger('change');
             }
 
         };
@@ -470,6 +502,7 @@
             delete this._lookup[model.id];
             this.length -= 1;
             this.stopListening(model);
+            this.trigger('remove:model')
             this.trigger('change');
         };
 
@@ -479,6 +512,7 @@
             this._models.splice(index, 1);
             this._models.splice(pos, 0, model);
             this._lookup[model.id] = index;
+            this.trigger('change:order')
             this.trigger('change');
         };
 
@@ -513,6 +547,7 @@
 
         // Get the index of the item
         Collection.prototype.indexOf = function (model) {
+            console.log('-- indexof', model);
             if (typeof model === 'string') {
                 // Convert model id to actual model
                 return this.indexOf(this.get(model));
