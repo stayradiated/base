@@ -313,9 +313,13 @@
                 }
             }
 
-            // Stop listening for events
-            this.stopListening();
+        };
 
+        // Unbind the view and remove the element
+        Controller.prototype.release = function () {
+            this.unbind();
+            this.el.remove();
+            this.stopListening();
         };
 
         return Controller;
