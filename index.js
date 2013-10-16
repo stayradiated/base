@@ -146,7 +146,6 @@
             args = 2 <= arguments.length ? [].slice.call(arguments, 1) : [];
             // Is this a good idea?
             if (event !== '*') {
-                // console.log('--', event, args, '\n')
                 this.trigger('*', event, args);
             }
             actions = this._events[event];
@@ -347,7 +346,7 @@
 
             set = function (key) {
                 return function (value) {
-                    return self.set(key, value);
+                    return self.set.call(self, key, value);
                 };
             };
 
@@ -372,6 +371,9 @@
 
         // Change a value
         Model.prototype.set = function(key, value, options) {
+            if (! this.defaults.hasOwnProperty(key)) {
+                return this[key] = value;
+            }
             if (value === this._data[key]) { return; }
             this._data[key] = value;
             if (!options || !options.silent) {
@@ -382,7 +384,11 @@
 
         // Get a value
         Model.prototype.get = function(key) {
-            return this._data[key];
+            if (this.defaults.hasOwnProperty(key)) {
+                return this._data[key];
+            } else {
+                return this[key];
+            }
         };
 
         // Load data into the model
@@ -408,8 +414,8 @@
         Model.prototype.toJSON = function (strict) {
             var key, json;
             if (strict) {
-                for (key in this._defaults) {
-                    if (this._defaults.hasOwnProperty(key)) {
+                for (key in this.defaults) {
+                    if (this.defaults.hasOwnProperty(key)) {
                         json[key] = this._data[key];
                     }
                 }
@@ -469,8 +475,6 @@
                 model.set('id', id, {silent: true});
             }
 
-            console.log('\n++ id', model.id, model.get('id'));
-
             // Add to collection
             model.collection = this;
             index = this._models.push(model) - 1;
@@ -482,7 +486,6 @@
                 '*': function(event, args) {
                     args = args.slice(0);
                     args.unshift(event + ':model', model);
-                    // console.log('++', event, ' -> ', self.type || self.className, self)
                     self.trigger.apply(self, args);
                 },
                 'before:destroy': function () {
@@ -551,7 +554,6 @@
 
         // Get the index of the item
         Collection.prototype.indexOf = function (model) {
-            console.log('-- indexof', model);
             if (typeof model === 'string') {
                 // Convert model id to actual model
                 return this.indexOf(this.get(model));

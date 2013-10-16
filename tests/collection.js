@@ -72,7 +72,6 @@
             var model = collection.create({
                 name: 'five'
             });
-            console.log('--creating', model);
             collection.indexOf(model.id).should.equal(collection.length - 1);
             collection.indexOf('null').should.equal(-1);
         });
