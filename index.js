@@ -3,7 +3,7 @@
 (function () {
     'use strict';
 
-    var include, extend, inherit, Module, Controller, Event, Model, Collection;
+    var include, extend, inherit, Module, View, Event, Model, Collection;
 
     // Copy object properties
     include = function (to, from) {
@@ -238,10 +238,10 @@
      * CONTROLLER
      */
 
-    Controller = (function () {
+    View = (function () {
 
-        function Controller(attrs) {
-            Controller.__super__.constructor.apply(this, arguments);
+        function View(attrs) {
+            View.__super__.constructor.apply(this, arguments);
             if (!this.elements) { this.elements = {}; }
             if (!this.events) { this.events = {}; }
             include(this, attrs);
@@ -249,10 +249,10 @@
         }
 
         // Load Events
-        inherit(Controller, Event);
-        include(Controller, Module);
+        inherit(View, Event);
+        include(View, Module);
 
-        Controller.prototype.bind = function (el) {
+        View.prototype.bind = function (el) {
             var selector, query, action, split, name, event;
 
             // If el is not specified use this.el
@@ -283,7 +283,7 @@
 
         };
 
-        Controller.prototype.unbind = function (el) {
+        View.prototype.unbind = function (el) {
             var selector, query, action, split, name, event;
 
             // If el is not specified use this.el
@@ -315,13 +315,13 @@
         };
 
         // Unbind the view and remove the element
-        Controller.prototype.release = function () {
+        View.prototype.release = function () {
             this.unbind();
             this.el.remove();
             this.stopListening();
         };
 
-        return Controller;
+        return View;
 
     }());
 
@@ -370,9 +370,10 @@
         include(Model, Module);
 
         // Change a value
-        Model.prototype.set = function(key, value, options) {
-            if (! this.defaults.hasOwnProperty(key)) {
-                return this[key] = value;
+        Model.prototype.set = function (key, value, options) {
+            if (!this.defaults.hasOwnProperty(key)) {
+                this[key] = value;
+                return value;
             }
             if (value === this._data[key]) { return; }
             this._data[key] = value;
@@ -383,12 +384,11 @@
         };
 
         // Get a value
-        Model.prototype.get = function(key) {
+        Model.prototype.get = function (key) {
             if (this.defaults.hasOwnProperty(key)) {
                 return this._data[key];
-            } else {
-                return this[key];
             }
+            return this[key];
         };
 
         // Load data into the model
@@ -483,7 +483,7 @@
 
             // Bubble events
             this.listen(model, {
-                '*': function(event, args) {
+                '*': function (event, args) {
                     args = args.slice(0);
                     args.unshift(event + ':model', model);
                     self.trigger.apply(self, args);
@@ -509,7 +509,7 @@
             delete this._lookup[model.id];
             this.length -= 1;
             this.stopListening(model);
-            this.trigger('remove:model')
+            this.trigger('remove:model');
             this.trigger('change');
         };
 
@@ -519,7 +519,7 @@
             this._models.splice(index, 1);
             this._models.splice(pos, 0, model);
             this._lookup[model.id] = index;
-            this.trigger('change:order')
+            this.trigger('change:order');
             this.trigger('change');
         };
 
@@ -602,12 +602,12 @@
     }());
 
     // Add the extend to method to all classes
-    Event.extend = Controller.extend = Model.extend = Collection.extend = extend;
+    Event.extend = View.extend = Model.extend = Collection.extend = extend;
 
     // Export all the classes
     module.exports = {
         Event: Event,
-        Controller: Controller,
+        View: View,
         Model: Model,
         Collection: Collection
     };

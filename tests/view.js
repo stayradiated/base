@@ -7,10 +7,10 @@
   // uses jQuery. I think I can get it working inside PhantomJS or something
   // though.
 
-  describe('Controller', function() {
+  describe('View', function() {
 
     var controller;
-    var Controller = Base.Controller.extend({
+    var View = Base.View.extend({
 
       elements: {
         '.selector': 'element'
@@ -23,7 +23,7 @@
     });
 
     it('should create a new controller', function() {
-      controller = new Controller();
+      controller = new View();
     });
 
     it('should have events', function() {

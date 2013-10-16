@@ -38,13 +38,13 @@ to work you must set all model properties using the `defaults` object.
 
 
 
-## Controller
+## View
 
-Controllers allow you to cache elements and bind DOM events
+Views allow you to cache elements and bind DOM events
 
     Base = require 'base'
 
-    class Panel extends Base.Controller
+    class Panel extends Base.View
 
         elements:
             'input.search': 'search'
@@ -75,7 +75,7 @@ A collection is just an array of models.
 
 ## Events
 
-You can use event methods on Models, Collections and Controllers.
+You can use event methods on Models, Collections and Views.
 
     var event = new Event();
 
