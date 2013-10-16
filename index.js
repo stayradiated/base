@@ -3,7 +3,7 @@
 (function () {
     'use strict';
 
-    var include, extend, inherit, Module, View, Event, Model, Collection;
+    var include, extend, inherit, View, Event, Model, Collection;
 
     // Copy object properties
     include = function (to, from) {
@@ -48,48 +48,6 @@
         return child;
     };
 
-    /*
-     * MODULE
-     *
-     * Module magic taken from Spine
-     */
-
-    Module = {
-
-        includes: function (obj) {
-            var key;
-            if (!obj) {
-                throw new Error('include(obj) requires obj');
-            }
-            for (key in obj) {
-                if (obj.hasOwnProperty(key) && key !== 'included' && key !== 'extended') {
-                    this.prototype[key] = obj[key];
-                }
-            }
-            if (obj.hasOwnProperty('included')) {
-                obj.included.apply(this);
-            }
-            return this;
-        },
-
-        extends: function (obj) {
-            var key;
-            if (!obj) {
-                throw new Error('extend(obj) requires obj');
-            }
-            for (key in obj) {
-                if (obj.hasOwnProperty(key) && key !== 'included' && key !== 'extended') {
-                    this[key] = obj[key];
-                }
-            }
-            if (obj.hasOwnProperty('extended')) {
-                obj.extended.apply(this);
-            }
-            return this;
-        }
-
-    };
-
 
     /*
      * EVENT
@@ -98,21 +56,9 @@
     Event = (function () {
 
         function Event(attrs) {
-            var key;
             this._events = {};
             this._listening = [];
-            // Bind events specified in attrs
-            if (attrs && attrs.on) {
-                for (key in attrs.on) {
-                    if (attrs.on.hasOwnProperty(key)) {
-                        this.on(key, attrs.on[key]);
-                    }
-                }
-                delete attrs.on;
-            }
         }
-
-        include(Event, Module);
 
         // Bind an event to a function
         // Returns an event ID so you can unbind it later
@@ -121,6 +67,7 @@
             if (typeof fn !== 'function') {
                 throw new Error('fn not function');
             }
+
             // Allow multiple events to be set at once such as:
             // event.on('update change refresh', this.render);
             ids = [];
@@ -137,6 +84,7 @@
                 this._events[event][id] = fn;
                 ids.push(id);
             }
+
             return ids;
         };
 
@@ -144,10 +92,12 @@
         Event.prototype.trigger = function (event) {
             var args, actions, i;
             args = 2 <= arguments.length ? [].slice.call(arguments, 1) : [];
-            // Is this a good idea?
+
+            // Listen to all events
             if (event !== '*') {
                 this.trigger('*', event, args);
             }
+
             actions = this._events[event];
             if (actions) {
                 for (i in actions) {
@@ -235,22 +185,30 @@
 
 
     /*
-     * CONTROLLER
+     * VIEW
      */
 
     View = (function () {
 
         function View(attrs) {
             View.__super__.constructor.apply(this, arguments);
-            if (!this.elements) { this.elements = {}; }
-            if (!this.events) { this.events = {}; }
             include(this, attrs);
-            if (this.el) { this.bind(); }
+
+            if (!this.elements) {
+                this.elements = {};
+            }
+
+            if (!this.events) {
+                this.events = {};
+            }
+
+            if (this.el) {
+                this.bind();
+            }
         }
 
         // Load Events
         inherit(View, Event);
-        include(View, Module);
 
         View.prototype.bind = function (el) {
             var selector, query, action, split, name, event;
@@ -367,7 +325,6 @@
 
         // Load Events
         inherit(Model, Event);
-        include(Model, Module);
 
         // Change a value
         Model.prototype.set = function (key, value, options) {
@@ -447,7 +404,6 @@
 
         // Load Events
         inherit(Collection, Event);
-        include(Collection, Module);
 
         // Access all models
         Collection.prototype.all = function () {

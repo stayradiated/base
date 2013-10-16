@@ -23,9 +23,10 @@
     });
 
     it('should set attributes', function() {
-      var value = 'value';
-      model.name = value;
-      model.name.should.equal(value);
+      model.name = 'one';
+      model.name.should.equal('one');
+      model.set('name', 'two');
+      model.name.should.equal('two');
     });
 
     it('should trigger events when setting attributes', function(done) {

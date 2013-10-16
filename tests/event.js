@@ -11,7 +11,7 @@
       event = new Base.Event();
     });
 
-    it('should trigger events', function(done) {
+    it('should listen and trigger events', function(done) {
 
       var arg = '123';
 
@@ -22,15 +22,6 @@
 
       event.trigger('event', arg);
 
-    });
-
-    it('should create events if attrs.on is set', function(done) {
-      event = new Base.Event({
-        on: {
-          'event': done
-        }
-      });
-      event.trigger('event');
     });
 
     describe('- Remembered events', function () {
