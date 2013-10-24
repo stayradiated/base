@@ -355,15 +355,15 @@
                 include(this._data, this.defaults);
             }
             include(this._data, data);
-            this.trigger('refresh');
+            this.trigger('refresh', this);
             return this;
         };
 
         // Destroy the model
         Model.prototype.destroy = function () {
-            this.trigger('before:destroy');
+            this.trigger('before:destroy', this);
             delete this._data;
-            this.trigger('destroy');
+            this.trigger('destroy', this);
             return this;
         };
 
