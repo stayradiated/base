@@ -326,14 +326,6 @@
         }
     };
 
-    // Get a value
-    Model.prototype.get = function (key) {
-        if (this.defaults.hasOwnProperty(key)) {
-            return this._data[key];
-        }
-        return this[key];
-    };
-
     // Load data into the model
     Model.prototype.refresh = function (data, replace) {
         if (replace) {
@@ -341,7 +333,15 @@
             include(this._data, this.defaults);
         }
         include(this._data, data);
-        this.trigger('refresh');
+        this.trigger('refresh', this);
+        return this;
+    };
+
+    // Destroy the model
+    Model.prototype.destroy = function () {
+        this.trigger('before:destroy', this);
+        delete this._data;
+        this.trigger('destroy', this);
         return this;
     };
 
