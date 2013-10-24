@@ -326,6 +326,14 @@
         }
     };
 
+    // Get a value
+    Model.prototype.get = function(key) {
+        if (this.defaults.hasOwnProperty(key)) {
+            return this._data[key];
+        }
+        return this[key];
+    };
+
     // Load data into the model
     Model.prototype.refresh = function (data, replace) {
         if (replace) {
