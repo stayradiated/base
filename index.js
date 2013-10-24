@@ -345,14 +345,6 @@
         return this;
     };
 
-    // Destroy the model
-    Model.prototype.destroy = function () {
-        this.trigger('before:destroy');
-        delete this._data;
-        this.trigger('destroy');
-        return this;
-    };
-
     // Convert the class instance into a simple object
     Model.prototype.toJSON = function (strict) {
         var key, json;
