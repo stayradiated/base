@@ -207,6 +207,9 @@
 
         // If el is not specified use this.el
         if (!el) { el = this.el; }
+        
+        // Else set this.el if it isn't already set
+        else if (!this.el) { this.el = el; }
 
         // Cache elements
         for (selector in this.elements) {
