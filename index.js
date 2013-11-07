@@ -495,6 +495,15 @@
         return this._models.sort.apply(this._models, arguments);
     };
 
+    // Get an array of all the properties from the models
+    Collection.prototype.pluck = function(property) {
+        var array = [];
+        this.forEach(function (task) {
+            array.push(task[property]);
+        });
+        return array
+    };
+
     // Get the index of the item
     Collection.prototype.indexOf = function (model) {
         if (typeof model === 'string') {
