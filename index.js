@@ -207,7 +207,7 @@
 
         // If el is not specified use this.el
         if (!el) { el = this.el; }
-        
+
         // Else set this.el if it isn't already set
         else if (!this.el) { this.el = el; }
 
@@ -402,11 +402,16 @@
     // Add a model to the collection
     Collection.prototype.add = function (model, options) {
 
-        var id, index, self = this;
+        var id, number, index, self = this;
 
         // Set ID
         if (model.id) {
             id = model.id;
+            // Make sure we don't reuse an existing id
+            number = parseInt(model.id.slice(2), 10);
+            if (number> this._index) {
+                this._index = number + 1;
+            }
         } else {
             id = 'c-' + this._index;
             this._index += 1;
