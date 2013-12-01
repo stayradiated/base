@@ -118,7 +118,11 @@
         }
         events = events.split(' ');
         for (i = 0, len = events.length; i < len; i += 1) {
-            delete this._events[events[i]][id];
+            if (typeof id !== 'undefined') {
+                delete this._events[events[i]][id];
+            } else {
+                delete this._events[events[i]];
+            }
         }
     };
 
