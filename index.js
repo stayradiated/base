@@ -87,6 +87,21 @@
         return ids;
     };
 
+
+    // Only run once
+    Event.prototype.once = function (event, fn) {
+      var handler, id;
+
+      handler = function () {
+        this.off(event, id);
+        fn.apply(fn, arguments);
+      }.bind(this);
+
+      id = this.on(event, handler);
+      
+      return id;
+    };
+
     // Trigger an event
     Event.prototype.trigger = function (event) {
         var args, actions, i;
@@ -505,7 +520,7 @@
         this.forEach(function (task) {
             array.push(task[property]);
         });
-        return array
+        return array;
     };
 
     // Get the index of the item
