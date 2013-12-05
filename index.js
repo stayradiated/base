@@ -90,16 +90,16 @@
 
     // Only run once
     Event.prototype.once = function (event, fn) {
-      var handler, id;
+        var handler, id;
 
-      handler = function () {
-        this.off(event, id);
-        fn.apply(fn, arguments);
-      }.bind(this);
+        handler = function () {
+            this.off(event, id);
+            fn.apply(fn, arguments);
+        }.bind(this);
 
-      id = this.on(event, handler);
-      
-      return id;
+        id = this.on(event, handler);
+
+        return id;
     };
 
     // Trigger an event
