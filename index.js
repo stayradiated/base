@@ -13,29 +13,35 @@
         to[key] = from[key];
       }
     }
+    return to;
   };
 
   // CoffeeScript extend for classes
   inherit = function (child, parent) {
-    var key, Klass;
-    for (key in parent) {
-      if (parent.hasOwnProperty(key)) {
-        child[key] = parent[key];
-      }
-    }
+    var Klass;
+
+    include(child, parent);
+
     Klass = function () {
       this.constructor = child;
     };
+
     Klass.prototype = parent.prototype;
     child.prototype = new Klass();
     child.__super__ = parent.prototype;
+
+    Klass = undefined;
+    parent = undefined;
+
     return child;
   };
 
   // Backbone like extending
   extend = function (attrs) {
     var child, parent = this;
+
     if (!attrs) { attrs = {}; }
+
     if (attrs.hasOwnProperty('constructor')) {
       child = attrs.constructor;
     } else {
@@ -43,8 +49,13 @@
         child.__super__.constructor.apply(this, arguments);
       };
     }
+
     inherit(child, parent);
     include(child.prototype, attrs);
+
+    attrs = undefined;
+    parent = undefined;
+
     return child;
   };
 
@@ -54,91 +65,128 @@
    */
 
   Event = function () {
+
+    // Stores all the event handlers that others are listening to on us
     this._events = {};
+
+    // Stores some of the event handlers that we are listening to on others
     this._listening = [];
+
   };
 
   // Bind an event to a function
   // Returns an event ID so you can unbind it later
-  Event.prototype.on = function (events, fn) {
-    var ids, id, i, len, event;
-    if (typeof fn !== 'function') {
-      throw new Error('fn not function');
-    }
+  Event.prototype.on = function (events, fn, context) {
+    var i, len, event;
 
     // Allow multiple events to be set at once such as:
     // event.on('update change refresh', this.render);
-    ids = [];
     events = events.split(' ');
-    for (i = 0, len = events.length; i < len; i += 1) {
+    len = events.length;
+
+    for (i = 0; i < len; i += 1) {
       event = events[i];
+
       // If the event has never been listened to before
-      if (!this._events[event]) {
-        this._events[event] = {};
-        this._events[event].index = 0;
+      if (! this._events.hasOwnProperty(event)) {
+        this._events[event] = [];
       }
-      // Increment the index and assign an ID
-      this._events[event].index += 1;
-      id = this._events[event].index;
-      this._events[event][id] = fn;
-      ids.push(id);
+
+      // Add the event handler
+      this._events[event].push({
+        callback: fn,
+        ctx: context || this
+      });
     }
 
-    return ids;
+    // Return the arguments so they can be reused to unbind
+    // the event handlers
+    return arguments;
   };
 
 
-  // Only run once
-  Event.prototype.once = function (event, fn) {
-    var handler, id;
+  // Only run an event once and then remove the handler
+  Event.prototype.once = function (event, fn, context) {
+    var self, once;
+    self = this;
 
-    handler = function () {
-      this.off(event, id);
-      fn.apply(fn, arguments);
-    }.bind(this);
+    // Create a wrapper function that unbinds the event
+    // and then runs the original function
+    once = function () {
+      self.off(event, once);
+      fn.apply(this, arguments);
+    };
 
-    id = this.on(event, handler);
+    // So that you can use `fn` to unbind the event as well
+    once._callback = fn;
 
-    return id;
+    return this.on(event, once, context);
   };
+
 
   // Trigger an event
   Event.prototype.trigger = function (event) {
-    var args, actions, i;
-    args = 2 <= arguments.length ? [].slice.call(arguments, 1) : [];
+    var args, events, a1, a2, a3, i, len, ev;
+    args = [].slice.call(arguments, 1);
 
     // Listen to all events
     if (event !== '*') {
       this.trigger('*', event, args);
     }
 
-    actions = this._events[event];
-    if (actions) {
-      for (i in actions) {
-        if (actions.hasOwnProperty(i) && i !== 'index') {
-          actions[i].apply(actions[i], args);
-        }
-      }
+    // Don't do anything if there are not any events
+    if (! this._events.hasOwnProperty(event)) {
+      return;
     }
+
+    i = -1;
+    a1 = args[0];
+    a2 = args[1];
+    a3 = args[2];
+
+    events = this._events[event];
+    len = events.length;
+
+    // Backbone.js does this and it seems pretty fast
+
+    switch (args.length) {
+      case 0:  while (++i < len) (ev = events[i]).callback.call(ev.ctx); return;
+      case 1:  while (++i < len) (ev = events[i]).callback.call(ev.ctx, a1); return;
+      case 2:  while (++i < len) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;
+      case 3:  while (++i < len) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
+      default: while (++i < len) (ev = events[i]).callback.apply(ev.ctx, args); return;
+    }
+
   };
 
   // Remove a listener from an event
-  Event.prototype.off = function (events, id) {
-    var i, len;
-    if (Array.isArray(id)) {
-      for (i = 0, len = id.length; i < len; i += 1) {
-        this.off(events, id[i]);
-      }
-      return;
-    }
+  Event.prototype.off = function (events, fn) {
+    var i, j, k, l, name, event, retain, handler;
     events = events.split(' ');
-    for (i = 0, len = events.length; i < len; i += 1) {
-      if (typeof id !== 'undefined') {
-        delete this._events[events[i]][id];
-      } else {
-        delete this._events[events[i]];
+    l = events.length;
+
+    // Go through each event specified
+    for (i = 0; i < l; i += 1) {
+
+      name = events[i];
+      event = this._events[name];
+      this._events[name] = retain = [];
+
+      if (typeof fn !== 'undefined') {
+
+        // Loop through each of the event handlers
+        k = event.length;
+        for (j = 0; j < k; j += 1) {
+
+          handler = event[j].callback;
+
+          if (handler!== fn && handler._callback !== fn) {
+            retain.push(event[j]);
+          }
+        }
       }
     }
+
   };
 
   /**
@@ -187,11 +235,14 @@
       obj = this._listening[i][0];
       if (!object || object === obj) {
         events = this._listening[i][1];
+
         for (event in events) {
           if (events.hasOwnProperty(event)) {
-            obj.off(event, events[event]);
+            event = events[event];
+            obj.off.call(obj, event[0], event[1]);
           }
         }
+
       }
     }
     this._listening = [];
@@ -205,8 +256,8 @@
     View.__super__.constructor.apply(this, arguments);
     include(this, attrs);
 
-    if (!this.elements) {
-      this.elements = {};
+    if (!this.ui) {
+      this.ui = {};
     }
 
     if (!this.events) {
@@ -216,40 +267,53 @@
     if (this.el) {
       this.bind();
     }
+
   };
 
   // Load Events
   inherit(View, Event);
 
   View.prototype.bind = function (el) {
-    var selector, query, action, split, name, event;
+    var selector, query, action, split, name, ui;
 
     // If el is not specified use this.el
     if (!el) { el = this.el; }
 
-    // Else set this.el if it isn't already set
-    else if (!this.el) { this.el = el; }
+    // Convert strings into jQuery objects
+    if (typeof el === 'string') {
+      el = $(el);
+    }
 
-    // Cache elements
-    for (selector in this.elements) {
-      if (this.elements.hasOwnProperty(selector)) {
-        name = this.elements[selector];
-        this[name] = el.find(selector);
+    this.el = el;
+
+    // Clone the ui list so we can use it in sub classes
+    if (! this._ui) {
+      this._ui = include({}, this.ui);
+    }
+
+    this.ui = {};
+
+    // Load UI elements
+    for (name in this._ui) {
+      if (this._ui.hasOwnProperty(name)) {
+        this.ui[name] = el.find(this._ui[name]);
       }
     }
 
     // Bind events
     for (query in this.events) {
       if (this.events.hasOwnProperty(query)) {
+
         action = this.events[query];
-        split = query.indexOf(' ') + 1;
-        event = query.slice(0, split || 9e9);
-        if (split > 0) {
-          selector = query.slice(split);
-          el.on(event, selector, this[action]);
+        split = query.indexOf(' ');
+
+        if (split > -1) {
+          selector = query.slice(split + 1);
+          el.on(query.slice(0, split), selector, this[action]);
         } else {
-          el.on(event, this[action]);
+          el.on(query, this[action]);
         }
+
       }
     }
 
@@ -262,24 +326,21 @@
     if (!el) { el = this.el; }
 
     // Delete elements
-    for (selector in this.elements) {
-      if (this.elements.hasOwnProperty(selector)) {
-        name = this.elements[selector];
-        delete this[name];
-      }
-    }
+    delete this.ui;
 
     // Unbind events
     for (query in this.events) {
       if (this.events.hasOwnProperty(query)) {
+
         action = this.events[query];
-        split = query.indexOf(' ') + 1;
-        event = query.slice(0, split || 9e9);
-        if (split > 0) {
-          selector = query.slice(split);
-          el.off(event, selector);
+        split = query.indexOf(' ');
+        event = query.slice(0, split || undefined);
+
+        if (split > -1) {
+          selector = query.slice(split + 1);
+          el.off(event, selector, this[action]);
         } else {
-          el.off(event);
+          el.off(event, this[action]);
         }
       }
     }
@@ -435,15 +496,15 @@
     var id, number, index, self = this;
 
     // Set ID
-    if (model.id) {
+    if (model.id !== null && model.id !== undefined) {
       id = model.id;
       // Make sure we don't reuse an existing id
-      number = parseInt(model.id.slice(2), 10);
-      if (number> this._index) {
+      number = parseInt(id.slice(1), 10);
+      if (!isNaN(number) && number >= this._index) {
         this._index = number + 1;
       }
     } else {
-      id = 'c-' + this._index;
+      id = 'c' + this._index;
       this._index += 1;
       model.set('id', id, {silent: true});
     }
@@ -455,6 +516,23 @@
     this.length += 1;
 
     // Bubble events
+    this._bubble(model);
+
+    // Only trigger create if silent is not set
+    if (!options || !options.silent) {
+      this.trigger('create:model', model);
+      this.trigger('change');
+    }
+
+  };
+
+
+  // Hook into the events of a model and bubble them
+  // up to this collection
+  Collection.prototype._bubble = function (model) {
+
+    var self = this;
+
     this.listen(model, {
       '*': function (event, args) {
         args = args.slice(0);
@@ -465,12 +543,6 @@
         self.remove(model);
       }
     });
-
-    // Only trigger create if silent is not set
-    if (!options || !options.silent) {
-      this.trigger('create:model', model);
-      this.trigger('change');
-    }
 
   };
 
@@ -527,10 +599,10 @@
 
   // Get an array of all the properties from the models
   Collection.prototype.pluck = function(property) {
-    var array = [];
-    this.forEach(function (task) {
-      array.push(task[property]);
-    });
+    var i, len = this.length, array = [];
+    for (i = 0; i < len; i += 1) {
+      array.push(this._models[i][property]);
+    }
     return array;
   };
 
