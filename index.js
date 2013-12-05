@@ -308,7 +308,18 @@
         if (!this.defaults) { this.defaults = {}; }
         this._data = {};
         include(this._data, this.defaults);
-        include(this._data, attrs);
+
+        // Merge attributes into the correct object
+        // depending on whether the key is in the defaults object
+        for (key in attrs) {
+            if (attrs.hasOwnProperty(key)) {
+                if (this.defaults.hasOwnProperty(key)) {
+                    this._data[key] = attrs[key];
+                } else {
+                    this[key] = attrs[key];
+                }
+            }
+        }
 
         set = function (key) {
             return function (value) {
