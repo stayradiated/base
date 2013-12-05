@@ -1,6 +1,6 @@
 {
   "name": "base",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "A tiny and simple javascript MVC framework",
   "main": "index.js",
   "repository": {
