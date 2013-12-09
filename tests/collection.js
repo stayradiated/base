@@ -63,9 +63,13 @@
             var current, record;
             current = collection.at(3);
             record = collection.at(2);
+
             collection.move(record, 3);
             collection.at(3).should.eql(record);
             collection.at(2).should.eql(current);
+
+            collection.get(record.id).should.eql(record);
+            collection.get(current.id).should.eql(current);
         });
 
         it('should get the index of the model', function () {
@@ -95,10 +99,10 @@
         });
 
         it('should get a record by its id', function () {
-            var id = collection.create({
+            var model = collection.create({
                 name: 'seven'
-            }).id;
-            collection.get(id).name.should.equal('seven');
+            });
+            collection.get(model.id).should.equal(model);
         });
 
         it('should loop through all the records', function () {

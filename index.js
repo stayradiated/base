@@ -559,13 +559,29 @@
   };
 
   // Reorder the collection
-  Collection.prototype.move = function (model, pos) {
+  Collection.prototype.move = function (model, pos, noindex) {
     var index = this.indexOf(model);
     this._models.splice(index, 1);
     this._models.splice(pos, 0, model);
-    this._lookup[model.id] = index;
+
+    if (! noindex) {
+      this.reindex();
+    }
+
     this.trigger('change:order');
     this.trigger('change');
+  };
+
+
+  // Regenerate the lookup table
+  // Useful if you are moving lots of items around
+  Collection.prototype.reindex = function () {
+    var i, len;
+    len = this._models.length;
+    this._lookup = [];
+    for (i = 0; i < len; i++) {
+      this._lookup[this._models[i].id] = i;
+    }
   };
 
   // Append or replace the data in the collection
