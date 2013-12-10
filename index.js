@@ -595,19 +595,24 @@
     return this.trigger('refresh');
   };
 
+  // Get a range from the collection
+  Collection.prototype.slice = function (begin, end) {
+    return this._models.slice(begin, end);
+  };
+
   // Loop over each record in the collection
-  Collection.prototype.forEach = function () {
-    return this._models.forEach.apply(this._models, arguments);
+  Collection.prototype.forEach = function (callback, _this) {
+    return this._models.forEach(callback, _this);
   };
 
   // Filter the models
-  Collection.prototype.filter = function () {
-    return this._models.filter.apply(this._models, arguments);
+  Collection.prototype.filter = function (callback, _this) {
+    return this._models.filter(callback, _this);
   };
 
   // Sort the models. Does not alter original order
-  Collection.prototype.sort = function () {
-    return this._models.sort.apply(this._models, arguments);
+  Collection.prototype.sort = function (fn) {
+    return this._models.sort(fn);
   };
 
   // Get an array of all the properties from the models
