@@ -76,7 +76,7 @@
 
   // Bind an event to a function
   // Returns an event ID so you can unbind it later
-  Event.prototype.on = function (events, fn, context) {
+  Event.prototype.on = function (events, fn) {
     var i, len, event;
 
     // Allow multiple events to be set at once such as:
@@ -93,10 +93,7 @@
       }
 
       // Add the event handler
-      this._events[event].push({
-        callback: fn,
-        ctx: context || this
-      });
+      this._events[event].push(fn);
     }
 
     // Return the arguments so they can be reused to unbind
@@ -106,7 +103,7 @@
 
 
   // Only run an event once and then remove the handler
-  Event.prototype.once = function (event, fn, context) {
+  Event.prototype.once = function (event, fn) {
     var self, once;
     self = this;
 
@@ -120,7 +117,7 @@
     // So that you can use `fn` to unbind the event as well
     once._callback = fn;
 
-    return this.on(event, once, context);
+    return this.on(event, once);
   };
 
 
@@ -150,11 +147,11 @@
     // Backbone.js does this and it seems pretty fast
 
     switch (args.length) {
-      case 0:  while (++i < len) (ev = events[i]).callback.call(ev.ctx); return;
-      case 1:  while (++i < len) (ev = events[i]).callback.call(ev.ctx, a1); return;
-      case 2:  while (++i < len) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;
-      case 3:  while (++i < len) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
-      default: while (++i < len) (ev = events[i]).callback.apply(ev.ctx, args); return;
+      case 0:  while (++i < len) events[i].call(this); return;
+      case 1:  while (++i < len) events[i].call(this, a1); return;
+      case 2:  while (++i < len) events[i].call(this, a1, a2); return;
+      case 3:  while (++i < len) events[i].call(this, a1, a2, a3); return;
+      default: while (++i < len) events[i].apply(this, args); return;
     }
 
   };
@@ -178,9 +175,9 @@
         k = event.length;
         for (j = 0; j < k; j += 1) {
 
-          handler = event[j].callback;
+          handler = event[j];
 
-          if (handler!== fn && handler._callback !== fn) {
+          if (handler !== fn && handler._callback !== fn) {
             retain.push(event[j]);
           }
         }
