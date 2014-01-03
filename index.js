@@ -425,6 +425,13 @@
     return this[key];
   };
 
+  // Change multiple values
+  Model.prototype.setAttributes = function (obj, options) {
+    for (var key in obj) {
+      this.set(key, obj[key], options);
+    }
+  };
+
   // Load data into the model
   Model.prototype.refresh = function (data, replace) {
     if (replace) {

@@ -3,6 +3,9 @@
   "version": "0.3.2",
   "description": "A tiny and simple javascript MVC framework",
   "main": "index.js",
+  "scripts": {
+    "test": "mocha tests"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/stayradiated/Base.git"
@@ -13,6 +16,9 @@
     "url": "https://github.com/stayradiated/Base/issues"
   },
   "devDependencies": {
-      "should": "1.2.x"
+    "should": "1.2.x"
+  },
+  "dependencies": {
+    "mocha": "~1.16.2"
   }
 }
