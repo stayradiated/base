@@ -501,7 +501,7 @@
 
     // Set ID
     if (model.id !== null && model.id !== undefined) {
-      id = model.id;
+      id = model.id.toString();
       // Make sure we don't reuse an existing id
       number = parseInt(id.slice(1), 10);
       if (!isNaN(number) && number >= this._index) {
