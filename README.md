@@ -9,8 +9,8 @@ This will probably never be published to the NPM registry, so the best way to
 install it is to use `npm link`.
 
     cd ~/npm_modules
-    git clone https://github.com/stayradiated/Base.git
-    cd Base
+    git clone https://github.com/stayradiated/base.git
+    cd base
     npm link
     cd ~/project
     npm link base
