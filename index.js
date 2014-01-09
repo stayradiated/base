@@ -535,7 +535,10 @@
   // up to this collection
   Collection.prototype._bubble = function (model) {
 
-    var self = this;
+    var self, id;
+
+    self = this;
+    id = model.id;
 
     this.listen(model, {
       '*': function (event, args) {
@@ -545,6 +548,11 @@
       },
       'before:destroy': function () {
         self.remove(model);
+      },
+      'change:id': function (newId) {
+        self._lookup[newId] = model;
+        delete self._lookup[id];
+        id = newId;
       }
     });
 
