@@ -405,7 +405,7 @@
 
   // Change a value
   Model.prototype.set = function (key, value, options) {
-    if (!this.defaults.hasOwnProperty(key)) {
+    if (! this.defaults.hasOwnProperty(key)) {
       this[key] = value;
       return value;
     }
@@ -452,16 +452,12 @@
   };
 
   // Convert the class instance into a simple object
-  Model.prototype.toJSON = function (strict) {
-    var key, json;
-    if (strict) {
-      for (key in this.defaults) {
-        if (this.defaults.hasOwnProperty(key)) {
-          json[key] = this._data[key];
-        }
+  Model.prototype.toJSON = function () {
+    var key, json = {};
+    for (key in this.defaults) {
+      if (this.defaults.hasOwnProperty(key)) {
+        json[key] = this._data[key];
       }
-    } else {
-      json = this._data;
     }
     return json;
   };
