@@ -579,14 +579,17 @@
   // Doesn't trigger any events when updating the array apart from 'refresh'
   Collection.prototype.refresh = function (data, replace) {
     var i, len;
-    if (replace) {
-      this._models = [];
-      this._lookup = {};
-    }
+    if (replace) { this.deleteAll(); }
     for (i = 0, len = data.length; i < len; i += 1) {
       this.create(data[i], { silent: true });
     }
     return this.trigger('refresh');
+  };
+
+  Collection.prototype.deleteAll = function () {
+    this._data = {};
+    this._lookup = {};
+    this.length = 0;
   };
 
   // Get a range from the collection
