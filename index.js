@@ -587,7 +587,7 @@
   };
 
   Collection.prototype.deleteAll = function () {
-    this._data = {};
+    this._models = [];
     this._lookup = {};
     this.length = 0;
   };
