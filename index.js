@@ -478,6 +478,25 @@
   // Load Events
   inherit(Collection, Event);
 
+  // Generate a new id
+  Collection.prototype.generateId = function () {
+    return 'c' + this._index++;
+  };
+
+  // Parse id
+  Collection.prototype.parseId = function (id) {
+    var number;
+    id = id.toString();
+    number = parseInt(id.slice(1), 10);
+    return isNaN(number) ? id : number;
+  };
+
+  // Update id
+  // - id (number) : output from this.parseId()
+  Collection.prototype.updateId = function (id) {
+    this._index = id + 1;
+  };
+
   // Access all models
   Collection.prototype.all = function () {
     return this._models;
@@ -497,15 +516,13 @@
 
     // Set ID
     if (model.id !== null && model.id !== undefined) {
-      id = model.id.toString();
       // Make sure we don't reuse an existing id
-      number = parseInt(id.slice(1), 10);
-      if (!isNaN(number) && number >= this._index) {
-        this._index = number + 1;
+      id = this.parseId(model.id);
+      if (number >= this._index) {
+        this.updateId(number);
       }
     } else {
-      id = 'c' + this._index;
-      this._index += 1;
+      id = this.generateId();
       model.set('id', id, {silent: true});
     }
 
@@ -623,7 +640,8 @@
 
   // Get the index of the item
   Collection.prototype.indexOf = function (model) {
-    if (typeof model === 'string') {
+    var type = typeof model;
+    if (type === 'string' || type === 'number') {
       // Convert model id to actual model
       return this.indexOf(this.get(model));
     }
