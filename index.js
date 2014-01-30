@@ -76,12 +76,12 @@
 
   // Bind an event to a function
   // Returns an event ID so you can unbind it later
-  Event.prototype.on = function (events, fn) {
-    var i, len, event;
+  Event.prototype.on = function (_events, fn) {
+    var i, len, event, events;
 
     // Allow multiple events to be set at once such as:
     // event.on('update change refresh', this.render);
-    events = events.split(' ');
+    events = _events.split(' ');
     len = events.length;
 
     for (i = 0; i < len; i += 1) {
