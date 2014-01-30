@@ -1,6 +1,11 @@
 Base
 ====
 
+[![Build Status](https://travis-ci.org/stayradiated/base.png?branch=master)](https://travis-ci.org/stayradiated/base)
+[![Coverage Status](https://coveralls.io/repos/stayradiated/base/badge.png)](https://coveralls.io/r/stayradiated/base)
+[![Dependency Status](https://david-dm.org/stayradiated/base.png)](https://david-dm.org/stayradiated/base)
+[![devDependency Status](https://david-dm.org/stayradiated/base/dev-status.png)](https://david-dm.org/stayradiated/base#info=devDependencies)
+
 > A minimal javascript MVC framework for modern browsers
 
 ## Installation
