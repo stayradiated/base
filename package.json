@@ -1,10 +1,11 @@
 {
   "name": "base",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "A tiny and simple javascript MVC framework",
   "main": "index.js",
   "scripts": {
-    "test": "mocha tests"
+    "test": "mocha",
+    "coveralls": "mocha -r blanket -R mocha-lcov-reporter | coveralls"
   },
   "repository": {
     "type": "git",
@@ -16,9 +17,17 @@
     "url": "https://github.com/stayradiated/Base/issues"
   },
   "devDependencies": {
-    "should": "1.2.x"
+    "should": "1.2.x",
+    "mocha-lcov-reporter": "0.0.1",
+    "blanket": "~1.1.6",
+    "coveralls": "~2.7.0"
   },
   "dependencies": {
     "mocha": "~1.16.2"
+  },
+  "config": {
+    "blanket": {
+      "pattern": "Base/index"
+    }
   }
 }
