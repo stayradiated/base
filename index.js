@@ -479,12 +479,12 @@
   inherit(Collection, Event);
 
   // Generate a new id
-  Collection.prototype.generateId = function () {
+  Collection.prototype._generateId = function () {
     return 'c' + this._index++;
   };
 
   // Parse id
-  Collection.prototype.parseId = function (id) {
+  Collection.prototype._parseId = function (id) {
     var number;
     id = id.toString();
     number = parseInt(id.slice(1), 10);
@@ -493,8 +493,10 @@
 
   // Update id
   // - id (number) : output from this.parseId()
-  Collection.prototype.updateId = function (id) {
-    this._index = id + 1;
+  Collection.prototype._updateIndex = function (id) {
+    if (id > this._index) {
+      this._index = id + 1;
+    }
   };
 
   // Access all models
@@ -517,12 +519,10 @@
     // Set ID
     if (model.id !== null && model.id !== undefined) {
       // Make sure we don't reuse an existing id
-      id = this.parseId(model.id);
-      if (number >= this._index) {
-        this.updateId(number);
-      }
+      id = this._parseId(model.id);
+      this._updateIndex(id);
     } else {
-      id = this.generateId();
+      id = this._generateId();
       model.set('id', id, {silent: true});
     }
 
