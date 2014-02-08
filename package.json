@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "coveralls": "mocha -r blanket -R mocha-lcov-reporter | coveralls"
+    "coveralls": "./node_modules/.bin/mocha -r blanket -R mocha-lcov-reporter | ./node_modules/.bin/coveralls"
   },
   "repository": {
     "type": "git",
