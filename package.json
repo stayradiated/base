@@ -4,8 +4,8 @@
   "description": "A tiny and simple javascript MVC framework",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
-    "coveralls": "./node_modules/.bin/mocha -r blanket -R mocha-lcov-reporter"
+    "test": "mocha -R spec",
+    "coverage": "mocha -r blanket -R html-cov > coverage.html"
   },
   "repository": {
     "type": "git",
@@ -18,9 +18,7 @@
   },
   "devDependencies": {
     "should": "3.1.x",
-    "mocha-lcov-reporter": "0.0.x",
     "blanket": "1.1.x",
-    "coveralls": "2.7.x",
     "mocha": "1.17.x"
   },
   "config": {

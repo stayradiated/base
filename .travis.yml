@@ -5,5 +5,3 @@ services:
   - mysql
 before_script:
   - mysql -e 'create database nitro_travis'
-after_success:
-  - npm run-script coveralls
