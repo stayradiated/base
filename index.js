@@ -587,9 +587,22 @@
     this.trigger('change');
   };
 
-  // Reorder the collection
+  /**
+   * Collection::Move
+   *
+   * Reorder the collection.
+   * Will place the model before the position.
+   * This means that the model may not be at the position afterwards.
+   *
+   * - model (id|Model)
+   * - pos (int)
+   * > null
+   */
+
   Collection.prototype.move = function (model, pos) {
     var index = this.indexOf(model);
+    if (index === pos) { return; }
+    if (index < pos) { pos--; }
     this._models.splice(index, 1);
     this._models.splice(pos, 0, model);
     this.trigger('change:order');
