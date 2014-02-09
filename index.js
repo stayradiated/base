@@ -513,8 +513,12 @@
 
   // Add a model to the collection
   Collection.prototype.add = function (model, options) {
+    var id, number, index;
 
-    var id, number, index, self = this;
+    // Require model defaults to contain 'id'
+    if (! model.defaults.hasOwnProperty('id')) {
+      throw new Error('Base: Models in Collections must have a default id');
+    }
 
     // Set ID
     if (model.id !== null && model.id !== undefined) {
